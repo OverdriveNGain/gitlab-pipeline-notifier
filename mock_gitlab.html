@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mock GitLab Pipeline #12345</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        .header { border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
+        .pipeline-header-container { display: flex; align-items: center; gap: 10px; }
+        .ci-status-text { font-weight: bold; padding: 5px 10px; border-radius: 4px; }
+        .status-running { background-color: #e2e2e2; color: #333; }
+        .status-success { background-color: #ecfdf5; color: #108548; }
+        .status-failed { background-color: #fef2f2; color: #dd2b0e; }
+        
+        .controls { margin-top: 50px; border: 1px solid #ccc; padding: 20px; background: #f9f9f9; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Pipeline #12345</h1>
+        <div class="pipeline-header-container">
+            Status: <span class="ci-status-text status-running">running</span>
+        </div>
+    </div>
+
+    <div class="content">
+        <p>This is a mock page to test the GitLab Pipeline Notifier extension.</p>
+        <p>The URL must match <code>/pipelines/\d+</code> for the button to appear automatically.</p>
+        <p>If you opened this file locally and the URL doesn't match, you can manually run <code>init()</code> in the console if the extension is loaded.</p>
+    </div>
+
+    <div class="controls">
+        <h3>Test Controls</h3>
+        <button onclick="setStatus('running')">Set Status: Running</button>
+        <button onclick="setStatus('success')">Set Status: Success</button>
+        <button onclick="setStatus('failed')">Set Status: Failed</button>
+    </div>
+
+    <script>
+        function setStatus(status) {
+            const el = document.querySelector('.ci-status-text');
+            el.textContent = status;
+            el.className = 'ci-status-text status-' + status;
+        }
+    </script>
+</body>
+</html>

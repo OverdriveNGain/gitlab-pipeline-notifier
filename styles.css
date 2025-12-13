@@ -1,8 +1,13 @@
-.gitlab-pipeline-notifier-btn {
+.gitlab-pipeline-notifier-container {
   position: fixed;
   bottom: 20px;
   right: 20px;
   z-index: 9999;
+  display: flex;
+  gap: 10px;
+}
+
+.gitlab-pipeline-notifier-btn {
   padding: 10px 20px;
   background-color: #e24329; /* GitLab orange */
   color: white;
@@ -25,4 +30,12 @@
 
 .gitlab-pipeline-notifier-btn.watching:hover {
   background-color: #33eb86;
+}
+
+.gitlab-pipeline-notifier-test-btn {
+  background-color: #666;
+}
+
+.gitlab-pipeline-notifier-test-btn:hover {
+  background-color: #888;
 }

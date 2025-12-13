@@ -11,14 +11,30 @@ function init() {
 }
 
 function injectButton() {
-  if (document.getElementById('gitlab-pipeline-notifier-btn')) return;
+  if (document.getElementById('gitlab-pipeline-notifier-container')) return;
+
+  const container = document.createElement('div');
+  container.id = 'gitlab-pipeline-notifier-container';
+  container.className = 'gitlab-pipeline-notifier-container';
 
   const btn = document.createElement('button');
   btn.id = 'gitlab-pipeline-notifier-btn';
   btn.className = 'gitlab-pipeline-notifier-btn';
   btn.textContent = 'Notify me!';
   btn.onclick = toggleWatch;
-  document.body.appendChild(btn);
+
+  const testBtn = document.createElement('button');
+  testBtn.id = 'gitlab-pipeline-notifier-test-btn';
+  testBtn.className = 'gitlab-pipeline-notifier-btn gitlab-pipeline-notifier-test-btn';
+  testBtn.textContent = 'Test';
+  testBtn.onclick = () => {
+    console.log('GitLab Pipeline Notifier: Test button clicked');
+    notify('Test Notification', 'This is a test notification from GitLab Pipeline Notifier.');
+  };
+
+  container.appendChild(btn);
+  container.appendChild(testBtn);
+  document.body.appendChild(container);
 }
 
 function toggleWatch() {
@@ -69,6 +85,8 @@ function stopWatching() {
 function checkStatus() {
   if (!isWatching) return;
 
+  console.log('GitLab Pipeline Notifier: Checking status...');
+
   // 1. Check overall pipeline status
   // Selector based on sample page: [data-testid="page-heading-description"] [data-testid="ci-icon-text"]
   const statusTextEl = document.querySelector('[data-testid="page-heading-description"] [data-testid="ci-icon-text"]');
@@ -76,44 +94,73 @@ function checkStatus() {
 
   if (statusTextEl) {
     const text = statusTextEl.textContent.trim().toLowerCase();
+    console.log(`GitLab Pipeline Notifier: Found status text: "${text}"`);
+
     if (text === 'passed') pipelineStatus = 'success';
     else if (text === 'failed') pipelineStatus = 'failed';
     else if (text === 'canceled') pipelineStatus = 'canceled';
+    else if (text.includes('warning')) pipelineStatus = 'warning'; // Handle warning
     else if (text === 'running' || text === 'pending') pipelineStatus = 'running';
   } else {
     // Fallback or log
     console.log('GitLab Pipeline Notifier: Could not find pipeline status element.');
   }
 
+  console.log(`GitLab Pipeline Notifier: Determined pipeline status: "${pipelineStatus}"`);
+
   // 2. Check for individual job failures
   // Selector based on sample page: elements with class .ci-job-item-failed
   const failedJobs = document.querySelectorAll('.ci-job-item-failed');
   const hasFailedJobs = failedJobs.length > 0;
+  console.log(`GitLab Pipeline Notifier: Failed jobs count: ${failedJobs.length}`);
 
   if (pipelineStatus === 'success') {
+    console.log('GitLab Pipeline Notifier: Pipeline success detected. Notifying.');
     notify('Pipeline Succeeded', 'The pipeline has completed successfully.');
     toggleWatch(); // Stop watching
+  } else if (pipelineStatus === 'warning') {
+    console.log('GitLab Pipeline Notifier: Pipeline warning detected. Notifying.');
+    notify('Pipeline Passed with Warnings', 'The pipeline has completed with warnings.');
+    toggleWatch(); // Stop watching
   } else if (pipelineStatus === 'failed') {
+    console.log('GitLab Pipeline Notifier: Pipeline failure detected. Notifying.');
     notify('Pipeline Failed', 'The pipeline has failed.');
     toggleWatch(); // Stop watching
   } else if (pipelineStatus === 'canceled') {
+    console.log('GitLab Pipeline Notifier: Pipeline canceled detected. Notifying.');
     notify('Pipeline Canceled', 'The pipeline was canceled.');
     toggleWatch(); // Stop watching
   } else if (pipelineStatus === 'running' && hasFailedJobs) {
     if (!hasNotifiedJobFailure) {
+      console.log('GitLab Pipeline Notifier: Job failure detected while running. Notifying.');
       notify('Pipeline Job Failed', 'A job in the pipeline has failed.');
       hasNotifiedJobFailure = true;
       // Continue watching for final status
+    } else {
+      console.log('GitLab Pipeline Notifier: Job failure detected but already notified.');
     }
+  } else {
+    console.log('GitLab Pipeline Notifier: No status change requiring notification.');
   }
 }
 
 function notify(title, body) {
-  chrome.runtime.sendMessage({
-    type: 'PIPELINE_NOTIFICATION',
-    title: title,
-    body: body
-  });
+  console.log(`GitLab Pipeline Notifier: Sending notification - Title: "${title}", Body: "${body}"`);
+  try {
+    chrome.runtime.sendMessage({
+      type: 'PIPELINE_NOTIFICATION',
+      title: title,
+      body: body
+    }, (response) => {
+      if (chrome.runtime.lastError) {
+        console.error('GitLab Pipeline Notifier: Error sending message:', chrome.runtime.lastError);
+      } else {
+        console.log('GitLab Pipeline Notifier: Message sent successfully. Response:', response);
+      }
+    });
+  } catch (e) {
+    console.error('GitLab Pipeline Notifier: Exception sending message:', e);
+  }
 }
 
 // Run init on load and on URL change (for SPA navigation)
@@ -133,7 +180,7 @@ new MutationObserver(() => {
     // If we were watching previous page, and navigated away, the button is gone (DOM replaced), so watching effectively stops visually.
     // But the interval is still running! We should stop it if the button is gone.
 
-    if (!document.getElementById('gitlab-pipeline-notifier-btn')) {
+    if (!document.getElementById('gitlab-pipeline-notifier-container')) {
       stopWatching();
       isWatching = false;
     }

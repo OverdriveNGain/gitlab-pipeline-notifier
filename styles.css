@@ -39,3 +39,54 @@
 .gitlab-pipeline-notifier-test-btn:hover {
   background-color: #888;
 }
+
+/* Floating MR Widget */
+.gitlab-mr-floating-widget {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  background-color: var(--gl-background-color-default, #fff);
+  border: 1px solid var(--gl-border-color-default, #dbdbdb);
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 12px;
+  max-width: 300px;
+  display: none; /* Hidden by default */
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  animation: slideIn 0.3s ease-out;
+}
+
+.gitlab-mr-floating-widget.visible {
+  display: block;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.gitlab-mr-floating-widget h4 {
+  margin: 0 0 8px 0;
+  font-size: 14px;
+  font-weight: bold;
+  color: #333;
+}
+
+.gitlab-mr-floating-widget .widget-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+  font-size: 13px;
+}
+
+.gitlab-mr-floating-widget .widget-row:last-child {
+  margin-bottom: 0;
+}

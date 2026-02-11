@@ -88,8 +88,13 @@ const NewPipelineTracker = {
   },
 
   captureRef: () => {
-    const btn = document.querySelector(TRACKER_SELECTORS.branchSelector + ' button');
-    if (btn) return btn.innerText.trim();
+    let el = document.querySelector(TRACKER_SELECTORS.branchSelector + ' button');
+
+    if (!el) {
+      el = document.querySelector(TRACKER_SELECTORS.branchSelector);
+    }
+
+    if (el) return el.innerText.trim();
 
     const hiddenInput = document.querySelector('input[name="ref"]');
     if (hiddenInput) return hiddenInput.value;

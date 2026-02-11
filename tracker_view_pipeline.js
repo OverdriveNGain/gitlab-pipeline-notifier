@@ -1,36 +1,10 @@
 const PipelineViewTracker = {
   init: () => {
-    // 1. Check if we have a pending pipeline that matches this
-    PipelineRepository.getPending((pending) => {
-      const pipelineId = PipelineViewTracker.getPipelineIdFromUrl();
+    const pipelineId = PipelineViewTracker.getPipelineIdFromUrl();
 
-      if (pending) {
-        // Check if this pending pipeline is "fresh" (e.g. within last 120 seconds) 
-        const now = Date.now();
-        if (now - pending.timestamp < 120000 && pending.projectPath === PipelineViewTracker.getProjectPath()) {
-          console.log('GitLab Pipeline Tracker: Found matching pending pipeline data');
-          PipelineRepository.addPipeline({
-            id: pipelineId,
-            projectPath: pending.projectPath,
-            branch: pending.branch,
-            variables: pending.variables,
-            label: pending.label,
-            startTime: pending.timestamp,
-            status: 'running',
-            url: window.location.href
-          }, () => {
-            console.log('GitLab Pipeline Tracker: Saved new pipeline to history');
-            PipelineViewTracker.displayPipelineInfo(pipelineId);
-          });
-
-          PipelineRepository.clearPending();
-        }
-      }
-
-      // 2. Start tracking status changes/display info
-      PipelineViewTracker.displayPipelineInfo(pipelineId);
-      PipelineViewTracker.trackStatus(pipelineId);
-    });
+    // Start tracking status changes/display info
+    PipelineViewTracker.displayPipelineInfo(pipelineId);
+    PipelineViewTracker.trackStatus(pipelineId);
   },
 
   getPipelineIdFromUrl: () => {
@@ -64,6 +38,9 @@ const PipelineViewTracker = {
     PipelineRepository.getHistory((history) => {
       const entry = history.find(p => p.id.toString() === id.toString());
       if (entry) {
+        const btn = document.getElementById('gitlab-pipeline-tracker-btn');
+        if (btn) btn.remove();
+
         PipelineViewTracker.renderVariableWidget(entry);
         PipelineViewTracker.renderLabelUnderTitle(entry);
       } else {
@@ -99,15 +76,35 @@ const PipelineViewTracker = {
   },
 
   trackCurrentPipeline: (id) => {
+    // Capture the HTML content of the related merge request/commit info
     const branchRef = document.querySelector(TRACKER_SELECTORS.pipelineRef);
-    const branch = branchRef ? branchRef.innerText.trim() : 'unknown';
+    let branchHtml = 'unknown';
+
+    if (branchRef) {
+      // Clone the node to manipulate links without changing the DOM
+      const clone = branchRef.cloneNode(true);
+      // Ensure links are absolute or handled correctly if needed, 
+      // but for now keeping them as relative is fine if the base URL is correct.
+      // However, in the popup, relative links might break. 
+      // Let's prepend the origin to all hrefs if they are relative.
+      const origin = window.location.origin;
+      clone.querySelectorAll('a').forEach(a => {
+        const href = a.getAttribute('href');
+        if (href && href.startsWith('/')) {
+          a.setAttribute('href', origin + href);
+        }
+        a.setAttribute('target', '_blank'); // Open in new tab
+      });
+      branchHtml = clone.innerHTML;
+    }
+
     const statusEl = document.querySelector(TRACKER_SELECTORS.pipelineStatus);
     const status = statusEl ? statusEl.innerText.trim() : 'unknown';
 
     const entry = {
       id: id,
       projectPath: PipelineViewTracker.getProjectPath(),
-      branch: branch,
+      branch: branchHtml, // Storing HTML now
       variables: [],
       label: '',
       startTime: Date.now(),

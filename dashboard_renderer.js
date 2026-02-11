@@ -46,35 +46,29 @@ const DashboardRenderer = {
 
     return `
       <div class="pipeline-header">
-          <div style="display:flex; flex-direction:column; gap:4px;">
-              <div style="display:flex; justify-content:space-between; align-items:start;">
-                  <div>
-                      <a href="${pipeline.url}" target="_blank" class="pipeline-id">#${pipeline.id}</a>
-                      <span class="pipeline-time">${timeString}</span>
-                  </div>
-                  <button class="delete-btn" data-id="${pipeline.id}" title="Remove from history">
-                      <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
-                          <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
-                          <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
-                      </svg>
-                  </button>
+          <div style="display:flex; justify-content:space-between; align-items:start; width: 100%;">
+              <div>
+                  <a href="${pipeline.url}" target="_blank" class="pipeline-id">#${pipeline.id}</a>
+                  <span class="pipeline-time">${timeString}</span>
               </div>
-              <input type="text" 
-                     class="pipeline-label-input form-input" 
-                     value="${Utils.escapeHtml(pipeline.label || '')}" 
-                     placeholder="Add a label..." 
-                     data-id="${pipeline.id}"
-                     style="font-size:12px; padding:2px 6px; width:100%; border:none; background:transparent; color:#e6ac00; font-weight:bold; border-bottom:1px dashed var(--gl-border-color);"
-              >
+              <button class="delete-btn" data-id="${pipeline.id}" title="Remove from history">
+                  <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+                      <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                      <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                  </svg>
+              </button>
           </div>
+          <input type="text" 
+                 class="pipeline-label-input form-input" 
+                 value="${Utils.escapeHtml(pipeline.label || '')}" 
+                 placeholder="Add a label..." 
+                 data-id="${pipeline.id}"
+                 style="font-size:12px; padding:2px 6px; width:100%; border:none; background:transparent; color:#e6ac00; font-weight:bold; border-bottom:1px dashed var(--gl-border-color); box-sizing: border-box;"
+          >
       </div>
       <div class="pipeline-ref">
           <span style="display:flex;align-items:center;">
-              <svg viewBox="0 0 16 16" class="ref-icon" style="margin-right:4px;">
-                  <path d="M10 2.5a.5.5 0 0 0-1 0V4H6a.5.5 0 0 0 0 1h3a.5.5 0 0 0 .5-.5V2.5z"/>
-                  <path d="M7.75 6.5a1.25 1.25 0 1 1 2.5 0 1.25 1.25 0 0 1-2.5 0z"/>
-              </svg>
-              ${pipeline.branch && pipeline.branch !== 'unknown' ? Utils.escapeHtml(pipeline.branch) : '<span style="opacity:0.5; font-style:italic;">Unknown Ref</span>'}
+              ${pipeline.branch && pipeline.branch !== 'unknown' ? pipeline.branch : '<span style="opacity:0.5; font-style:italic;">Unknown Ref</span>'}
           </span>
           ${statusBadge}
       </div>

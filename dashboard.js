@@ -21,7 +21,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const matchesSearch = (p.id && p.id.toString().includes(searchTerm)) ||
         (p.branch && p.branch.toLowerCase().includes(searchTerm)) ||
         (p.label && p.label.toLowerCase().includes(searchTerm));
-      const matchesStatus = statusValue === 'all' || (p.status && p.status.toLowerCase() === statusValue);
+      const matchesStatus = statusValue === 'all' ||
+        (p.status && p.status.toLowerCase() === statusValue) ||
+        (statusValue === 'passed' && p.status && p.status.toLowerCase() === 'success');
       return matchesSearch && matchesStatus;
     });
 

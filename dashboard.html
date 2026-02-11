@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitLab Pipeline History</title>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+
+<body class="gl-dark">
+  <div class="app-container">
+    <header class="app-header">
+      <div class="header-content">
+        <img src="icons/icon48.png" alt="Logo" class="app-logo">
+        <h1>Pipeline History</h1>
+      </div>
+      <div class="header-actions">
+        <button id="clearHistoryBtn" class="btn btn-danger">Clear History</button>
+      </div>
+    </header>
+
+    <main class="pipeline-list-container">
+      <div class="controls">
+        <input type="text" id="searchInput" placeholder="Search pipelines..." class="form-input">
+        <select id="statusFilter" class="form-select">
+          <option value="all">All Statuses</option>
+          <option value="success">Success</option>
+          <option value="failed">Failed</option>
+          <option value="running">Running</option>
+        </select>
+      </div>
+
+      <ul id="pipelineList" class="pipeline-list">
+        <!-- Pipelines will be injected here -->
+        <li class="empty-state">
+          <p>No pipeline history found.</p>
+        </li>
+      </ul>
+    </main>
+  </div>
+
+  <script src="utils.js"></script>
+  <script src="repository.js"></script>
+  <script src="dashboard_renderer.js"></script>
+  <script src="dashboard.js"></script>
+</body>
+
+</html>

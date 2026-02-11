@@ -4,7 +4,8 @@
   "version": "1.0",
   "description": "Notifies you when a GitLab pipeline completes.",
   "permissions": [
-    "notifications"
+    "notifications",
+    "storage"
   ],
   "content_scripts": [
     {
@@ -15,7 +16,13 @@
         "notifications.js",
         "mr_reorder.js",
         "mr_floating_widget.js",
-        "content.js"
+        "content.js",
+        "utils.js",
+        "repository.js",
+        "tracker_selectors.js",
+        "tracker_new_pipeline.js",
+        "tracker_view_pipeline.js",
+        "pipeline_tracker.js"
       ],
       "css": [
         "styles.css"
@@ -24,6 +31,14 @@
   ],
   "background": {
     "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "dashboard.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
   },
   "icons": {
     "16": "icons/icon16.png",

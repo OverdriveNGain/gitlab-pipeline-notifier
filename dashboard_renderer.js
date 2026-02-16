@@ -80,7 +80,13 @@ const DashboardRenderer = {
     const filledVars = variables.filter(v => v.value && v.value.trim() !== '');
     const emptyVars = variables.filter(v => !v.value || v.value.trim() === '');
 
-    let varsHtml = '<div class="pipeline-variables">';
+    if (filledVars.length === 0 && emptyVars.length === 0) return '';
+
+    let varsHtml = `
+        <details class="pipeline-variables-details">
+            <summary class="pipeline-variables-summary">Recorded Parameters (${variables.length})</summary>
+            <div class="pipeline-variables-content">
+    `;
 
     // Render filled variables
     filledVars.forEach(v => {
@@ -92,7 +98,7 @@ const DashboardRenderer = {
         `;
     });
 
-    // Render empty variables in a dropdown
+    // Render empty variables in a nested dropdown
     if (emptyVars.length > 0) {
       varsHtml += `
             <details class="empty-vars-dropdown">
@@ -109,7 +115,10 @@ const DashboardRenderer = {
         `;
     }
 
-    varsHtml += '</div>';
+    varsHtml += `
+            </div>
+        </details>
+    `;
     return varsHtml;
   },
 

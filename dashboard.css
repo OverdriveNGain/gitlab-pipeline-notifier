@@ -139,11 +139,29 @@ h1 {
     text-decoration: underline;
 }
 
-.pipeline-variables {
+.pipeline-variables-details {
     font-size: 12px;
+    margin-top: 8px;
+}
+
+.pipeline-variables-summary {
+    cursor: pointer;
+    color: var(--gl-text-secondary);
+    font-weight: 500;
+    user-select: none;
+    margin-bottom: 4px;
+    font-size: 12px;
+}
+
+.pipeline-variables-summary:hover {
+    color: var(--gl-text-color);
+}
+
+.pipeline-variables-content {
     background-color: rgba(0,0,0,0.2);
     border-radius: 4px;
     padding: 8px;
+    margin-top: 4px;
 }
 
 .variable-row {

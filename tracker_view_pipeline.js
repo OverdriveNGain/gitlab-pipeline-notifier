@@ -2,9 +2,59 @@ const PipelineViewTracker = {
   init: () => {
     const pipelineId = PipelineViewTracker.getPipelineIdFromUrl();
 
-    // Start tracking status changes/display info
-    PipelineViewTracker.displayPipelineInfo(pipelineId);
-    PipelineViewTracker.trackStatus(pipelineId);
+    // Check for pending data from New Pipeline page
+    PipelineViewTracker.checkPendingPipeline(pipelineId, () => {
+      // Start tracking status changes/display info
+      PipelineViewTracker.displayPipelineInfo(pipelineId);
+      PipelineViewTracker.trackStatus(pipelineId);
+    });
+  },
+
+  checkPendingPipeline: (id, callback) => {
+    PipelineRepository.getPending((pending) => {
+      if (pending && (Date.now() - pending.timestamp < 60000) && pending.projectPath === PipelineViewTracker.getProjectPath()) {
+        console.log('Found pending pipeline data, linking to ID:', id);
+
+        Utils.waitForElement(TRACKER_SELECTORS.pipelineRef, (branchRef) => {
+          let branchHtml = pending.branch || 'unknown';
+
+          if (branchRef) {
+            const clone = branchRef.cloneNode(true);
+            const origin = window.location.origin;
+            clone.querySelectorAll('a').forEach(a => {
+              const href = a.getAttribute('href');
+              if (href && href.startsWith('/')) {
+                a.setAttribute('href', origin + href);
+              }
+              a.setAttribute('target', '_blank');
+            });
+            branchHtml = clone.innerHTML;
+          }
+
+          const statusEl = document.querySelector(TRACKER_SELECTORS.pipelineStatus);
+          const status = statusEl ? statusEl.innerText.trim() : 'Running';
+
+          const entry = {
+            id: id,
+            projectPath: pending.projectPath,
+            branch: branchHtml,
+            variables: pending.variables,
+            label: pending.label,
+            startTime: pending.timestamp,
+            status: status,
+            url: window.location.href
+          };
+
+          PipelineRepository.addPipeline(entry, () => {
+            PipelineRepository.clearPending(() => {
+              if (callback) callback();
+            });
+          });
+        });
+      } else {
+        if (callback) callback();
+      }
+    });
   },
 
   getPipelineIdFromUrl: () => {

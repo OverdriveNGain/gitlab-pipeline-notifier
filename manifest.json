@@ -18,6 +18,8 @@
       "js": [
         "src/common/utils.js",
         "src/common/repository.js",
+        "src/common/badges/badge_utils.js",
+        "src/common/badges/badge_renderer.js",
         "src/new_pipeline/selectors.js",
         "src/new_pipeline/new_pipeline.js",
         "src/new_pipeline/main.js"
@@ -42,6 +44,8 @@
       "js": [
         "src/common/utils.js",
         "src/common/repository.js",
+        "src/common/badges/badge_utils.js",
+        "src/common/badges/badge_renderer.js",
         "src/view_pipeline/selectors.js",
         "src/view_pipeline/view_pipeline.js",
         "src/view_pipeline/main.js"

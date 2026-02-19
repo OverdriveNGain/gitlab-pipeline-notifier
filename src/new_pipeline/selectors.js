@@ -7,5 +7,6 @@ const TRACKER_SELECTORS = {
   variableValue: '[data-testid="pipeline-form-ci-variable-value-field"]',
   branchSelector: '[data-testid="branch-select-button"]',
   branchDropdownToggle: '[data-testid="branch-select-button"] .dropdown-toggle-text',
-  branchDropdownToggle: '[data-testid="branch-select-button"] .dropdown-toggle-text'
+  branchDropdownToggle: '[data-testid="branch-select-button"] .dropdown-toggle-text',
+  breadcrumbs: '.gl-breadcrumbs'
 };

@@ -37,6 +37,7 @@ const PipelineViewTracker = {
           const entry = {
             id: id,
             projectPath: pending.projectPath,
+            projectName: pending.projectName,
             branch: branchHtml,
             variables: pending.variables,
             label: pending.label,
@@ -190,21 +191,7 @@ const PipelineViewTracker = {
     const titleContainer = document.createElement('div');
     titleContainer.innerHTML = '<h3 class="gl-card-title gl-m-0 gl-text-base">Pipeline Parameters Tracker</h3>';
 
-    const labelInput = document.createElement('input');
-    labelInput.type = 'text';
-    labelInput.className = 'form-control gl-form-input gl-ml-3';
-    labelInput.style.cssText = 'width: 200px; padding: 4px 8px; font-size: 13px; height: 28px;';
-    labelInput.placeholder = 'Add label...';
-    labelInput.value = entry.label || '';
-
-    labelInput.addEventListener('change', (e) => {
-      PipelineRepository.updateLabel(entry.id, e.target.value.trim(), () => {
-        console.log('Label updated');
-      });
-    });
-
     header.appendChild(titleContainer);
-    header.appendChild(labelInput);
 
     const body = document.createElement('div');
     body.className = 'gl-card-body';
@@ -245,19 +232,155 @@ const PipelineViewTracker = {
   },
 
   renderLabelUnderTitle: (entry) => {
-    if (!entry.label) return;
+    // Allows empty label now so we can show "Add Label"
     if (document.getElementById('pipeline-tracker-header-label')) return;
 
     Utils.waitForElement('[data-testid="pipeline-title"]', (title) => {
-      const labelEl = document.createElement('div');
-      labelEl.id = 'pipeline-tracker-header-label';
-      labelEl.innerText = entry.label;
-      labelEl.style.color = '#e6ac00';
-      labelEl.style.fontSize = '14px';
-      labelEl.style.marginTop = '4px';
-      labelEl.style.fontWeight = 'bold';
+      const container = document.createElement('div');
+      container.id = 'pipeline-tracker-header-label';
+      container.style.display = 'flex';
+      container.style.alignItems = 'center';
+      container.style.marginTop = '4px';
 
-      title.parentNode.insertBefore(labelEl, title.nextSibling);
+      const labelEl = document.createElement('span');
+      labelEl.innerText = entry.label || 'Add Label';
+      labelEl.style.color = entry.label ? '#e6ac00' : 'var(--gl-text-secondary)';
+      labelEl.style.fontSize = '14px';
+      labelEl.style.fontWeight = 'bold';
+      labelEl.style.marginRight = '8px';
+      if (!entry.label) labelEl.style.fontStyle = 'italic';
+
+      const editBtn = document.createElement('button');
+      editBtn.innerText = '(Edit)';
+      editBtn.className = 'btn btn-default btn-sm';
+      editBtn.style.padding = '2px 6px';
+      editBtn.style.fontSize = '12px';
+      editBtn.style.border = 'none';
+      editBtn.style.background = 'transparent';
+      editBtn.style.color = 'var(--gl-text-blue-500)';
+      editBtn.style.cursor = 'pointer';
+
+      // Input for editing (hidden initially)
+      const inputEl = document.createElement('input');
+      inputEl.type = 'text';
+      inputEl.className = 'form-control gl-form-input';
+      inputEl.style.display = 'none';
+      inputEl.style.width = '300px';
+      inputEl.style.height = '24px';
+      inputEl.style.fontSize = '13px';
+      inputEl.value = entry.label || '';
+
+      // Edit Mode
+      editBtn.onclick = () => {
+        labelEl.style.display = 'none';
+        editBtn.style.display = 'none';
+        inputEl.style.display = 'block';
+        inputEl.focus();
+      };
+
+      // Save / Cancel
+      const saveLabel = () => {
+        const newLabel = inputEl.value.trim();
+        PipelineRepository.updateLabel(entry.id, newLabel, () => {
+          entry.label = newLabel;
+          labelEl.innerText = newLabel || 'Add Label';
+          labelEl.style.color = newLabel ? '#e6ac00' : 'var(--gl-text-secondary)';
+          labelEl.style.display = 'block';
+          if (!newLabel) labelEl.style.fontStyle = 'italic';
+          else labelEl.style.fontStyle = 'normal';
+
+          editBtn.style.display = 'block';
+          inputEl.style.display = 'none';
+        });
+      };
+
+      inputEl.addEventListener('blur', saveLabel);
+      inputEl.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          saveLabel();
+        }
+      });
+
+      container.appendChild(labelEl);
+      container.appendChild(editBtn);
+      container.appendChild(inputEl);
+
+      title.parentNode.insertBefore(container, title.nextSibling);
+
+      // Render Custom Badges (Interactive)
+      const badgesContainer = document.createElement('div');
+      badgesContainer.id = 'pipeline-badges-container-' + entry.id;
+      badgesContainer.style.display = 'flex';
+      badgesContainer.style.flexWrap = 'wrap';
+      badgesContainer.style.marginTop = '4px';
+      badgesContainer.style.gap = '4px';
+
+      const renderBadges = () => {
+        let html = '';
+        if (entry.badges && entry.badges.length > 0) {
+          html += entry.badges.map((badge, index) => {
+            return BadgeUtils.createBadgeHTML(badge, index, entry.id, true);
+          }).join('');
+        }
+
+        html += `<button class="badge-add-btn" data-id="${entry.id}" title="Add Badge" style="width:20px;height:20px;border-radius:50%;border:1px dashed #bfbfbf;background:none;color:#bfbfbf;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:14px;margin-left:4px;">+</button>`;
+
+        if (entry.badges && entry.badges.length > 0) {
+          html += `<button class="badge-copy-btn" data-id="${entry.id}" title="Copy all badges"><span style="margin-right:2px;">📋</span>Copy</button>`;
+        }
+
+        badgesContainer.innerHTML = html;
+
+        if (!document.getElementById('pipeline-tracker-badge-styles')) {
+          const style = document.createElement('style');
+          style.id = 'pipeline-tracker-badge-styles';
+          style.textContent = `
+                .custom-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid transparent; user-select: none; }
+                .custom-badge:hover { opacity: 0.8; }
+                .badge-gray { background-color: #424242; color: #e0e0e0; border-color: #616161; }
+                .badge-green { background-color: rgba(16, 133, 72, 0.2); color: #2da160; border-color: rgba(16, 133, 72, 0.3); }
+                .badge-blue { background-color: rgba(31, 117, 203, 0.2); color: #428fdc; border-color: rgba(31, 117, 203, 0.3); }
+                .badge-beige { background-color: #5c5c4f; color: #e8e8d8; border-color: #828270; }
+                .badge-add-btn:hover { border-color: #ececef !important; color: #ececef !important; opacity: 1; }
+                .badge-copy-btn { background: none; border: 1px solid #bfbfbf; color: #bfbfbf; border-radius: 4px; padding: 0 6px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; margin-left: 6px; opacity: 0.6; }
+                .badge-copy-btn:hover { opacity: 1; border-color: #ececef; color: #ececef; }
+            `;
+          document.head.appendChild(style);
+        }
+
+        badgesContainer.querySelectorAll('.badge-add-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            BadgeRenderer.showBadgePopover(btn, entry.id, null, null, () => location.reload());
+          });
+        });
+
+        badgesContainer.querySelectorAll('.badge-copy-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const textToCopy = entry.badges.map(b => {
+              return (b.emoji ? b.emoji + ' ' : '') + b.text;
+            }).join('\n');
+
+            Utils.copyToClipboard(textToCopy).then(() => {
+              const originalText = btn.innerHTML;
+              btn.innerHTML = 'Copied!';
+              setTimeout(() => btn.innerHTML = originalText, 2000);
+            });
+          });
+        });
+
+        badgesContainer.querySelectorAll('.custom-badge').forEach(badge => {
+          badge.addEventListener('click', (e) => {
+            const index = parseInt(badge.getAttribute('data-index'));
+            BadgeRenderer.showBadgePopover(badge, entry.id, entry.badges[index], index, () => location.reload());
+          });
+        });
+      };
+
+      renderBadges();
+      title.parentNode.insertBefore(badgesContainer, container.nextSibling);
+
     });
   }
 };

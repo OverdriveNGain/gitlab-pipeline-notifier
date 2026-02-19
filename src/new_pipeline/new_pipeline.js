@@ -61,6 +61,7 @@ const NewPipelineTracker = {
       branch: branch,
       variables: variables,
       label: customLabel,
+      projectName: NewPipelineTracker.captureProjectName(),
       projectPath: NewPipelineTracker.getProjectPath()
     };
 
@@ -111,5 +112,31 @@ const NewPipelineTracker = {
       return parts[0].substring(1);
     }
     return 'unknown';
+  },
+
+  captureProjectName: () => {
+    const breadcrumbs = document.querySelector(TRACKER_SELECTORS.breadcrumbs);
+    if (!breadcrumbs) return 'Unknown Project';
+
+    // The last item in breadcrumbs is typically "Pipelines" or "New" on this page, 
+    // so we need the one before the group/subgroup chain ends, or the last project-like link.
+    // Based on the provided HTML structure, the project name is the last link before "Pipelines" or just the last link in the chain that isn't the current page.
+
+    // Strategy: Get all 'a' tags in breadcrumbs.
+    const methods = breadcrumbs.querySelectorAll('li a');
+    if (methods.length > 0) {
+      // On "New Pipeline" page: ... > Project Name > Pipelines > New
+      // We want "Project Name".
+      // Let's filter out "Pipelines" and "New" if they exist, or just take the last meaningful one.
+
+      for (let i = methods.length - 1; i >= 0; i--) {
+        const text = methods[i].innerText.trim();
+        if (text !== 'Pipelines' && text !== 'New' && text !== 'Jobs') {
+          return text;
+        }
+      }
+    }
+
+    return 'Unknown Project';
   }
 };

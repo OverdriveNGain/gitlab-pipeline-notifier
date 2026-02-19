@@ -10,30 +10,52 @@
   "content_scripts": [
     {
       "matches": [
-        "<all_urls>"
+        "*://*/pipelines/new",
+        "*://*/-/pipelines/new",
+        "*://*/*/pipelines/new",
+        "*://*/*/-/pipelines/new"
       ],
       "js": [
-        "notifications.js",
-        "mr_reorder.js",
-        "mr_floating_widget.js",
-        "content.js",
-        "utils.js",
-        "repository.js",
-        "tracker_selectors.js",
-        "tracker_new_pipeline.js",
-        "tracker_view_pipeline.js",
-        "pipeline_tracker.js"
+        "src/common/utils.js",
+        "src/common/repository.js",
+        "src/new_pipeline/selectors.js",
+        "src/new_pipeline/new_pipeline.js",
+        "src/new_pipeline/main.js"
       ],
       "css": [
-        "styles.css"
+        "src/common/styles.css"
+      ]
+    },
+    {
+      "matches": [
+        "*://*/pipelines/*",
+        "*://*/-/pipelines/*",
+        "*://*/*/pipelines/*",
+        "*://*/*/-/pipelines/*"
+      ],
+      "exclude_matches": [
+        "*://*/pipelines/new",
+        "*://*/-/pipelines/new",
+        "*://*/*/pipelines/new",
+        "*://*/*/-/pipelines/new"
+      ],
+      "js": [
+        "src/common/utils.js",
+        "src/common/repository.js",
+        "src/view_pipeline/selectors.js",
+        "src/view_pipeline/view_pipeline.js",
+        "src/view_pipeline/main.js"
+      ],
+      "css": [
+        "src/common/styles.css"
       ]
     }
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "src/background/background.js"
   },
   "action": {
-    "default_popup": "dashboard.html",
+    "default_popup": "src/dashboard/dashboard.html",
     "default_icon": {
       "16": "icons/icon16.png",
       "48": "icons/icon48.png",

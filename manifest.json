@@ -10,16 +10,17 @@
   "content_scripts": [
     {
       "matches": [
-        "*://*/pipelines/new",
-        "*://*/-/pipelines/new",
-        "*://*/*/pipelines/new",
-        "*://*/*/-/pipelines/new"
+        "*://*/pipelines/new*",
+        "*://*/-/pipelines/new*",
+        "*://*/*/pipelines/new*",
+        "*://*/*/-/pipelines/new*"
       ],
       "js": [
         "src/common/utils.js",
         "src/common/repository.js",
         "src/common/badges/badge_utils.js",
         "src/common/badges/badge_renderer.js",
+        "src/common/badges/badge_row_renderer.js",
         "src/new_pipeline/selectors.js",
         "src/new_pipeline/new_pipeline.js",
         "src/new_pipeline/main.js"
@@ -36,19 +37,37 @@
         "*://*/*/-/pipelines/*"
       ],
       "exclude_matches": [
-        "*://*/pipelines/new",
-        "*://*/-/pipelines/new",
-        "*://*/*/pipelines/new",
-        "*://*/*/-/pipelines/new"
+        "*://*/pipelines/new*",
+        "*://*/-/pipelines/new*",
+        "*://*/*/pipelines/new*",
+        "*://*/*/-/pipelines/new*"
       ],
       "js": [
         "src/common/utils.js",
         "src/common/repository.js",
         "src/common/badges/badge_utils.js",
         "src/common/badges/badge_renderer.js",
+        "src/common/badges/badge_row_renderer.js",
         "src/view_pipeline/selectors.js",
         "src/view_pipeline/view_pipeline.js",
         "src/view_pipeline/main.js"
+      ],
+      "css": [
+        "src/common/styles.css"
+      ]
+    },
+    {
+      "matches": [
+        "*://*/merge_requests/*",
+        "*://*/-/merge_requests/*",
+        "*://*/*/merge_requests/*",
+        "*://*/*/-/merge_requests/*"
+      ],
+      "js": [
+        "src/common/utils.js",
+        "src/merge_request/selectors.js",
+        "src/merge_request/mr_tracker.js",
+        "src/merge_request/main.js"
       ],
       "css": [
         "src/common/styles.css"

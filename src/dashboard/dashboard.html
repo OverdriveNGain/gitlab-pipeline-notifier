@@ -5,6 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>GitLab Pipeline History</title>
+  <link rel="stylesheet" href="../common/styles.css">
   <link rel="stylesheet" href="dashboard.css">
 </head>
 
@@ -16,6 +17,7 @@
         <h1>Pipeline History</h1>
       </div>
       <div class="header-actions">
+        <button id="openFullScreenBtn" class="btn btn-secondary" style="margin-right: 8px;">Open Full Screen</button>
         <button id="clearHistoryBtn" class="btn btn-danger">Clear History</button>
       </div>
     </header>
@@ -44,6 +46,7 @@
   <script src="../common/repository.js"></script>
   <script src="../common/badges/badge_utils.js"></script>
   <script src="../common/badges/badge_renderer.js"></script>
+  <script src="../common/badges/badge_row_renderer.js"></script>
   <script src="dashboard_renderer.js"></script>
   <script src="dashboard.js"></script>
 </body>

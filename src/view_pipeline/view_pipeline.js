@@ -39,6 +39,7 @@ const PipelineViewTracker = {
             projectPath: pending.projectPath,
             projectName: pending.projectName,
             branch: branchHtml,
+            ref: pending.ref || pending.branch,
             variables: pending.variables,
             label: pending.label,
             startTime: pending.timestamp,
@@ -316,66 +317,8 @@ const PipelineViewTracker = {
       badgesContainer.style.gap = '4px';
 
       const renderBadges = () => {
-        let html = '';
-        if (entry.badges && entry.badges.length > 0) {
-          html += entry.badges.map((badge, index) => {
-            return BadgeUtils.createBadgeHTML(badge, index, entry.id, true);
-          }).join('');
-        }
-
-        html += `<button class="badge-add-btn" data-id="${entry.id}" title="Add Badge" style="width:20px;height:20px;border-radius:50%;border:1px dashed #bfbfbf;background:none;color:#bfbfbf;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;font-size:14px;margin-left:4px;">+</button>`;
-
-        if (entry.badges && entry.badges.length > 0) {
-          html += `<button class="badge-copy-btn" data-id="${entry.id}" title="Copy all badges"><span style="margin-right:2px;">📋</span>Copy</button>`;
-        }
-
-        badgesContainer.innerHTML = html;
-
-        if (!document.getElementById('pipeline-tracker-badge-styles')) {
-          const style = document.createElement('style');
-          style.id = 'pipeline-tracker-badge-styles';
-          style.textContent = `
-                .custom-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; cursor: pointer; border: 1px solid transparent; user-select: none; }
-                .custom-badge:hover { opacity: 0.8; }
-                .badge-gray { background-color: #424242; color: #e0e0e0; border-color: #616161; }
-                .badge-green { background-color: rgba(16, 133, 72, 0.2); color: #2da160; border-color: rgba(16, 133, 72, 0.3); }
-                .badge-blue { background-color: rgba(31, 117, 203, 0.2); color: #428fdc; border-color: rgba(31, 117, 203, 0.3); }
-                .badge-beige { background-color: #5c5c4f; color: #e8e8d8; border-color: #828270; }
-                .badge-add-btn:hover { border-color: #ececef !important; color: #ececef !important; opacity: 1; }
-                .badge-copy-btn { background: none; border: 1px solid #bfbfbf; color: #bfbfbf; border-radius: 4px; padding: 0 6px; height: 20px; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; cursor: pointer; margin-left: 6px; opacity: 0.6; }
-                .badge-copy-btn:hover { opacity: 1; border-color: #ececef; color: #ececef; }
-            `;
-          document.head.appendChild(style);
-        }
-
-        badgesContainer.querySelectorAll('.badge-add-btn').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            BadgeRenderer.showBadgePopover(btn, entry.id, null, null, () => location.reload());
-          });
-        });
-
-        badgesContainer.querySelectorAll('.badge-copy-btn').forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.preventDefault();
-            const textToCopy = entry.badges.map(b => {
-              return (b.emoji ? b.emoji + ' ' : '') + b.text;
-            }).join('\n');
-
-            Utils.copyToClipboard(textToCopy).then(() => {
-              const originalText = btn.innerHTML;
-              btn.innerHTML = 'Copied!';
-              setTimeout(() => btn.innerHTML = originalText, 2000);
-            });
-          });
-        });
-
-        badgesContainer.querySelectorAll('.custom-badge').forEach(badge => {
-          badge.addEventListener('click', (e) => {
-            const index = parseInt(badge.getAttribute('data-index'));
-            BadgeRenderer.showBadgePopover(badge, entry.id, entry.badges[index], index, () => location.reload());
-          });
-        });
+        badgesContainer.innerHTML = BadgeRowRenderer.createRowHTML(entry);
+        BadgeRowRenderer.attachListeners(badgesContainer, () => location.reload());
       };
 
       renderBadges();

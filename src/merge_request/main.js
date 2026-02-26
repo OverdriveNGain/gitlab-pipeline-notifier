@@ -1,0 +1,1 @@
+MergeRequestTracker.init();

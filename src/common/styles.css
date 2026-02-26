@@ -90,3 +90,94 @@
 .gitlab-mr-floating-widget .widget-row:last-child {
   margin-bottom: 0;
 }
+
+/* Custom Badges */
+.custom-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-left: 4px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: opacity 0.2s;
+    user-select: none;
+    white-space: nowrap;
+}
+
+.custom-badge:hover {
+    opacity: 0.8;
+}
+
+.badge-gray {
+    background-color: #424242; /* Dark Gray */
+    color: #e0e0e0;
+    border-color: #616161;
+}
+
+.badge-green {
+    background-color: rgba(16, 133, 72, 0.2);
+    color: #2da160;
+    border-color: rgba(16, 133, 72, 0.3);
+}
+
+.badge-blue {
+    background-color: rgba(31, 117, 203, 0.2);
+    color: #428fdc;
+    border-color: rgba(31, 117, 203, 0.3);
+}
+
+.badge-beige {
+    background-color: #5c5c4f;
+    color: #e8e8d8;
+    border-color: #828270;
+}
+
+.badge-add-btn {
+    background: none;
+    border: 1px dashed #bfbfbf;
+    color: #bfbfbf;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+    margin-left: 4px;
+    opacity: 0.6;
+}
+
+.badge-add-btn:hover {
+    opacity: 1;
+    border-color: #ececef;
+    color: #ececef;
+}
+
+.badge-copy-btn {
+    background: none;
+    border: 1px solid #bfbfbf;
+    color: #bfbfbf;
+    border-radius: 4px;
+    padding: 0 6px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    cursor: pointer;
+    margin-left: 6px;
+    opacity: 0.6;
+}
+
+.badge-copy-btn:hover {
+    opacity: 1;
+    border-color: #ececef;
+    color: #ececef;
+}
+
+.cursor-pointer { cursor: pointer; }
+.cursor-default { cursor: default; }

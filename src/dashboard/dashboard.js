@@ -2,6 +2,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const searchInput = document.getElementById('searchInput');
   const statusFilter = document.getElementById('statusFilter');
   const clearHistoryBtn = document.getElementById('clearHistoryBtn');
+  const openFullScreenBtn = document.getElementById('openFullScreenBtn');
+
+  // Check if we are already in full screen mode
+  const isFullScreen = new URLSearchParams(window.location.search).get('mode') === 'fullscreen';
+  if (isFullScreen) {
+    if (openFullScreenBtn) openFullScreenBtn.style.display = 'none';
+    document.body.classList.add('fullscreen-mode');
+  }
 
   let allPipelines = [];
 
@@ -35,6 +43,27 @@ document.addEventListener('DOMContentLoaded', () => {
         PipelineRepository.deletePipeline(id, () => {
           loadData();
         });
+      },
+      (id) => {
+        const pipeline = allPipelines.find(p => p.id.toString() === id.toString());
+        if (pipeline && pipeline.url) {
+          const baseUrl = pipeline.url.split('/-/pipelines')[0];
+          const url = new URL(`${baseUrl}/-/pipelines/new`);
+
+          if (pipeline.ref) {
+            url.searchParams.append('ref', pipeline.ref);
+          }
+
+          if (pipeline.variables && pipeline.variables.length > 0) {
+            pipeline.variables.forEach(v => {
+              if (v.key) {
+                url.searchParams.append(`var[${v.key}]`, v.value || '');
+              }
+            });
+          }
+
+          chrome.tabs.create({ url: url.toString() });
+        }
       }
     );
   }
@@ -50,6 +79,13 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
   });
+
+  if (openFullScreenBtn) {
+    openFullScreenBtn.addEventListener('click', () => {
+      const url = chrome.runtime.getURL('src/dashboard/dashboard.html?mode=fullscreen');
+      chrome.tabs.create({ url: url });
+    });
+  }
 
   // Listen for storage changes
   chrome.storage.onChanged.addListener((changes, namespace) => {

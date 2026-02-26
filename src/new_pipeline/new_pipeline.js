@@ -59,6 +59,7 @@ const NewPipelineTracker = {
     const pendingData = {
       timestamp: timestamp,
       branch: branch,
+      ref: branch,
       variables: variables,
       label: customLabel,
       projectName: NewPipelineTracker.captureProjectName(),
@@ -89,7 +90,17 @@ const NewPipelineTracker = {
   },
 
   captureRef: () => {
-    let el = document.querySelector(TRACKER_SELECTORS.branchSelector + ' button');
+    // There can be multiple base-dropdown-toggle elements. 
+    // The branch selector has an aria-labelledby attribute containing "pipeline-ref-label"
+    let el = document.querySelector('button[aria-labelledby*="pipeline-ref-label"] .gl-new-dropdown-button-text');
+
+    if (!el) {
+      el = document.querySelector('[data-testid="base-dropdown-toggle"] .gl-new-dropdown-button-text');
+    }
+
+    if (!el) {
+      el = document.querySelector(TRACKER_SELECTORS.branchSelector + ' button');
+    }
 
     if (!el) {
       el = document.querySelector(TRACKER_SELECTORS.branchSelector);
@@ -131,7 +142,8 @@ const NewPipelineTracker = {
 
       for (let i = methods.length - 1; i >= 0; i--) {
         const text = methods[i].innerText.trim();
-        if (text !== 'Pipelines' && text !== 'New' && text !== 'Jobs') {
+        const lowerText = text.toLowerCase();
+        if (text !== 'Pipelines' && text !== 'New' && text !== 'Jobs' && lowerText !== 'new pipeline') {
           return text;
         }
       }

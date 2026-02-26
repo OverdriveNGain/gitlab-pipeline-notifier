@@ -1,5 +1,5 @@
 const DashboardRenderer = {
-  renderList: (pipelines, containerId = 'pipelineList', onLabelChange, onDelete) => {
+  renderList: (pipelines, containerId = 'pipelineList', onLabelChange, onDelete, onRerun) => {
     const container = document.getElementById(containerId);
     if (!container) return;
 
@@ -38,32 +38,46 @@ const DashboardRenderer = {
         });
       });
     }
+
+    // Add listeners for rerun buttons
+    if (onRerun) {
+      container.querySelectorAll('.rerun-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const id = e.currentTarget.getAttribute('data-id');
+          onRerun(id);
+        });
+      });
+    }
+
+    // Add listeners for time hovering
+    DashboardRenderer.attachTimeListeners(container);
   },
 
   createPipelineItemHTML: (pipeline) => {
-    const timeString = Utils.formatDate(pipeline.startTime);
+    const humanTime = Utils.getHumanReadableDate(pipeline.startTime);
+    const fullTime = Utils.formatDate(pipeline.startTime);
     const statusClass = `status-${(pipeline.status || 'unknown').toLowerCase()}`;
     const statusBadge = `<span class="status-badge ${statusClass}">${pipeline.status || 'Unknown'}</span>`;
 
-    // Custom Badges
-    let customBadgesHtml = '';
-    if (pipeline.badges && pipeline.badges.length > 0) {
-      customBadgesHtml = pipeline.badges.map((badge, index) => {
-        return BadgeUtils.createBadgeHTML(badge, index, pipeline.id, true);
-      }).join('');
-    }
-
-    const addBadgeBtn = `<button class="badge-add-btn" data-id="${pipeline.id}" title="Add Badge">+</button>`;
-
-    let copyBadgeBtn = '';
-    if (pipeline.badges && pipeline.badges.length > 0) {
-      copyBadgeBtn = `<button class="badge-copy-btn" data-id="${pipeline.id}" title="Copy all badges"><span style="margin-right:2px;">📋</span>Copy</button>`;
-    }
+    // Custom Badges Row
+    const badgesRowHtml = BadgeRowRenderer.createRowHTML(pipeline);
 
     // Variables Section
     let varsHtml = '';
     if (pipeline.variables && pipeline.variables.length > 0) {
       varsHtml = DashboardRenderer.createVariablesHTML(pipeline.variables);
+    }
+
+    let rerunBtnHtml = '';
+    if (pipeline.ref) {
+      rerunBtnHtml = `
+                  <button class="rerun-btn" data-id="${pipeline.id}" title="Run pipeline again with same parameters" style="border:none;background:transparent;cursor:pointer;color:var(--gl-text-blue-500, #1f75cb);padding:0;display:flex;align-items:center;">
+                      <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+                          <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
+                          <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
+                      </svg>
+                  </button>
+      `;
     }
 
     return `
@@ -74,7 +88,10 @@ const DashboardRenderer = {
                   <span class="pipeline-project-name" style="font-size:11px; color:var(--gl-text-secondary); margin-left:6px; font-weight:bold;">${pipeline.projectName || 'Unknown Project'}</span>
               </div>
               <div style="display:flex; align-items:center; gap: 8px;">
-                  <span class="pipeline-time">${timeString}</span>
+                  <span class="pipeline-time" 
+                        data-human="${Utils.escapeHtml(humanTime)}" 
+                        data-full="${Utils.escapeHtml(fullTime)}">${humanTime}</span>
+                  ${rerunBtnHtml}
                   <button class="delete-btn" data-id="${pipeline.id}" title="Remove from history">
                       <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
                           <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
@@ -100,11 +117,7 @@ const DashboardRenderer = {
           </span>
           ${statusBadge}
       </div>
-      <div class="pipeline-badges" style="display:flex; align-items:center; margin-top:2px; margin-bottom:8px;">
-        ${customBadgesHtml}
-        ${addBadgeBtn}
-        ${copyBadgeBtn}
-      </div>
+      ${badgesRowHtml}
       ${varsHtml}
     `;
   },
@@ -177,68 +190,18 @@ const DashboardRenderer = {
   },
 
   attachBadgeListeners: () => {
-    // Helper to remove any existing popovers
-    const closePopovers = () => {
-      document.querySelectorAll('.badge-popover').forEach(el => el.remove());
-    };
+    BadgeRowRenderer.attachListeners(document, () => location.reload());
+  },
 
-    // Close popover when clicking outside
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.badge-popover') && !e.target.closest('.badge-add-btn') && !e.target.closest('.custom-badge')) {
-        closePopovers();
-      }
-    });
-
-    // --- Add Badge ---
-    document.querySelectorAll('.badge-add-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        closePopovers();
-
-        const pipelineId = btn.getAttribute('data-id');
-        BadgeRenderer.showBadgePopover(btn, pipelineId, null, null, () => location.reload());
+  attachTimeListeners: (container) => {
+    container.querySelectorAll('.pipeline-time').forEach(el => {
+      el.addEventListener('mouseenter', () => {
+        el.innerText = el.getAttribute('data-full');
+        el.classList.add('detailed-time');
       });
-    });
-
-    // --- Copy Badges ---
-    document.querySelectorAll('.badge-copy-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const pipelineId = btn.getAttribute('data-id');
-
-        PipelineRepository.getHistory((history) => {
-          const pipeline = history.find(p => p.id.toString() === pipelineId.toString());
-          if (pipeline && pipeline.badges && pipeline.badges.length > 0) {
-            const textToCopy = pipeline.badges.map(b => {
-              return (b.emoji ? b.emoji + ' ' : '') + b.text;
-            }).join('\n');
-
-            Utils.copyToClipboard(textToCopy).then(() => {
-              const originalText = btn.innerText;
-              btn.innerText = 'Copied!';
-              setTimeout(() => btn.innerText = originalText, 2000);
-            });
-          }
-        });
-      });
-    });
-
-    // --- Edit Badge ---
-    document.querySelectorAll('.custom-badge').forEach(badge => {
-      badge.addEventListener('click', (e) => {
-        e.stopPropagation();
-        closePopovers();
-
-        const pipelineId = badge.getAttribute('data-id');
-        const badgeIndex = parseInt(badge.getAttribute('data-index'));
-
-        // Fetch current badge data strictly for editing display
-        PipelineRepository.getHistory((history) => {
-          const pipeline = history.find(p => p.id.toString() === pipelineId.toString());
-          if (pipeline && pipeline.badges && pipeline.badges[badgeIndex]) {
-            BadgeRenderer.showBadgePopover(badge, pipelineId, pipeline.badges[badgeIndex], badgeIndex, () => location.reload());
-          }
-        });
+      el.addEventListener('mouseleave', () => {
+        el.innerText = el.getAttribute('data-human');
+        el.classList.remove('detailed-time');
       });
     });
   }

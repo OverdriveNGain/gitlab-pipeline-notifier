@@ -18,6 +18,7 @@
       "js": [
         "src/common/utils.js",
         "src/common/repository.js",
+        "src/common/badges/badge_templates.js",
         "src/common/badges/badge_utils.js",
         "src/common/badges/badge_renderer.js",
         "src/common/badges/badge_row_renderer.js",
@@ -45,6 +46,7 @@
       "js": [
         "src/common/utils.js",
         "src/common/repository.js",
+        "src/common/badges/badge_templates.js",
         "src/common/badges/badge_utils.js",
         "src/common/badges/badge_renderer.js",
         "src/common/badges/badge_row_renderer.js",
@@ -71,6 +73,22 @@
       ],
       "css": [
         "src/common/styles.css"
+      ]
+    },
+    {
+      "matches": [
+        "*://*/jobs/*",
+        "*://*/-/jobs/*",
+        "*://*/*/jobs/*",
+        "*://*/*/-/jobs/*"
+      ],
+      "js": [
+        "src/common/utils.js",
+        "src/common/repository.js",
+        "src/common/badges/badge_templates.js",
+        "src/job_log/selectors.js",
+        "src/job_log/job_tracker.js",
+        "src/job_log/main.js"
       ]
     }
   ],

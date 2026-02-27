@@ -48,9 +48,7 @@ const BadgeRenderer = {
       </style>
       <input type="text" class="badge-popover-input" id="badge-text" placeholder="Badge Text" value="${Utils.escapeHtml(textValue)}">
       <div class="badge-emoji-group">
-        <button class="badge-emoji-btn" data-emoji="🍎">🍎</button>
-        <button class="badge-emoji-btn" data-emoji="🤖">🤖</button>
-        <button class="badge-emoji-btn" data-emoji="🪽">🪽</button>
+        ${BadgeTemplates.map(t => `<button class="badge-emoji-btn" data-emoji="${t.emoji}">${t.emoji}</button>`).join('')}
         <button class="badge-emoji-btn" data-emoji="" style="font-size:12px">None</button>
       </div>
       <input type="text" class="badge-popover-input" id="badge-emoji-custom" placeholder="Custom Emoji" value="${Utils.escapeHtml(emojiValue)}" maxlength="2">

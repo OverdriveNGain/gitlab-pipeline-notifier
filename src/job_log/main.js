@@ -1,0 +1,1 @@
+JobLogTracker.init();

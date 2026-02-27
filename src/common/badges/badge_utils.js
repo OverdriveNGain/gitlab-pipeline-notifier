@@ -1,11 +1,8 @@
 const BadgeUtils = {
   getTheme: (emoji) => {
-    switch (emoji) {
-      case '🍎': return 'badge-gray';
-      case '🤖': return 'badge-green';
-      case '🪽': return 'badge-blue';
-      default: return 'badge-beige';
-    }
+    if (!emoji) return 'badge-beige';
+    const template = BadgeTemplates.find(t => t.emoji === emoji);
+    return template ? template.theme : 'badge-beige';
   },
 
   createBadgeHTML: (badge, index, pipelineId, isEditable = true) => {

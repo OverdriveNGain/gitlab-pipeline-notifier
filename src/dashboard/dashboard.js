@@ -28,7 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const filtered = allPipelines.filter(p => {
       const matchesSearch = (p.id && p.id.toString().includes(searchTerm)) ||
         (p.branch && p.branch.toLowerCase().includes(searchTerm)) ||
-        (p.label && p.label.toLowerCase().includes(searchTerm));
+        (p.label && p.label.toLowerCase().includes(searchTerm)) ||
+        (p.badges && p.badges.some(b => (b.text && b.text.toLowerCase().includes(searchTerm)) || (b.emoji && b.emoji.toLowerCase().includes(searchTerm))));
       const matchesStatus = statusValue === 'all' ||
         (p.status && p.status.toLowerCase() === statusValue) ||
         (statusValue === 'passed' && p.status && p.status.toLowerCase() === 'success');
@@ -60,6 +61,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 url.searchParams.append(`var[${v.key}]`, v.value || '');
               }
             });
+          }
+
+          if (pipeline.label) {
+            let newLabel = pipeline.label.trim();
+            const copyMatch = newLabel.match(/\(Copy( \d+)?\)$/);
+            if (copyMatch) {
+              const numMatch = copyMatch[1];
+              if (numMatch) {
+                const count = parseInt(numMatch.trim(), 10);
+                newLabel = newLabel.replace(/\(Copy \d+\)$/, `(Copy ${count + 1})`);
+              } else {
+                newLabel = newLabel.replace(/\(Copy\)$/, `(Copy 2)`);
+              }
+            } else {
+              newLabel = `${newLabel} (Copy)`;
+            }
+            url.searchParams.append('tracker_label', newLabel);
           }
 
           chrome.tabs.create({ url: url.toString() });

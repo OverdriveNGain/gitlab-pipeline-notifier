@@ -31,6 +31,11 @@ const NewPipelineTracker = {
     input.style.width = '100%';
     input.style.maxWidth = '400px';
 
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('tracker_label')) {
+      input.value = urlParams.get('tracker_label');
+    }
+
     container.appendChild(label);
     container.appendChild(input);
 

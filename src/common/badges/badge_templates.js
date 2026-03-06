@@ -2,16 +2,16 @@ const BadgeTemplates = [
   {
     id: 'apple-gray',
     emoji: '🍎',
-    text: 'Apple',
+    text: '$1',
     theme: 'badge-gray',
-    regex: null
+    regex: /Successfully finished processing the build (.*?) for IOS/
   },
   {
     id: 'robot-green',
     emoji: '🤖',
-    text: 'Robot',
+    text: '$1',
     theme: 'badge-green',
-    regex: null
+    regex: /created release (\S+ \(\d+\))/
   },
   {
     id: 'wing-blue',

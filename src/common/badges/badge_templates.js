@@ -4,7 +4,7 @@ const BadgeTemplates = [
     emoji: '🍎',
     text: 'Apple',
     theme: 'badge-gray',
-    regex: null // add your regex rules here
+    regex: null
   },
   {
     id: 'robot-green',

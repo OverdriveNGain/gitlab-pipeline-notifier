@@ -13,7 +13,19 @@ const JobLogTracker = {
       PipelineRepository.getHistory((history) => {
         const pipeline = history.find(p => p.id && p.id.toString() === pipelineId);
         if (!pipeline) {
-          console.log(`JobLogTracker: Pipeline #${pipelineId} is not tracked. Exiting auto-badge check.`);
+          PipelineRepository.getPipelineMapping((mapping) => {
+            if (mapping[pipelineId]) {
+              const parentId = mapping[pipelineId];
+              console.log(`JobLogTracker: Pipeline #${pipelineId} is mapped to tracked upstream pipeline #${parentId}`);
+              const parentPipeline = history.find(p => p.id && p.id.toString() === parentId);
+              if (parentPipeline) {
+                console.log(`JobLogTracker: Upstream pipeline #${parentId} is tracked! Starting log observation for parent.`);
+                JobLogTracker.startLogObservation(parentId);
+                return;
+              }
+            }
+            console.log(`JobLogTracker: Pipeline #${pipelineId} is not tracked. Exiting auto-badge check.`);
+          });
           return;
         }
 

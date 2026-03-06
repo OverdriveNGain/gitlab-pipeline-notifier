@@ -70,5 +70,23 @@ const PipelineRepository = {
 
   clearPending: (callback) => {
     chrome.storage.local.remove('pending_pipeline', callback);
+  },
+
+  // Downstream Mapping Logic
+  getPipelineMapping: (callback) => {
+    chrome.storage.local.get('pipeline_mapping', (result) => {
+      callback(result.pipeline_mapping || {});
+    });
+  },
+
+  savePipelineMapping: (mapping, callback) => {
+    chrome.storage.local.set({ 'pipeline_mapping': mapping }, callback);
+  },
+
+  addPipelineMapping: (childId, parentId, callback) => {
+    PipelineRepository.getPipelineMapping((mapping) => {
+      mapping[childId] = parentId;
+      PipelineRepository.savePipelineMapping(mapping, callback);
+    });
   }
 };

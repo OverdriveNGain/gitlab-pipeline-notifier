@@ -97,7 +97,110 @@ const PipelineViewTracker = {
         PipelineViewTracker.renderLabelUnderTitle(entry);
       } else {
         PipelineViewTracker.renderTrackPipelineButton(id);
+        PipelineViewTracker.checkUpstreamMapping(id, history);
       }
+    });
+  },
+
+  checkUpstreamMapping: (id, history) => {
+    PipelineRepository.getPipelineMapping((mapping) => {
+      if (mapping[id]) {
+        const parentId = mapping[id];
+        const parentPipeline = history.find(p => p.id && p.id.toString() === parentId);
+        if (parentPipeline) {
+          // Intentional removal to avoid bugs for now
+          const btn = document.getElementById('gitlab-pipeline-tracker-btn');
+          if (btn) btn.remove();
+
+          PipelineViewTracker.renderLabelUnderTitle(parentPipeline, true);
+          PipelineViewTracker.renderTriggeredByText(parentId, history);
+          return;
+        }
+      }
+
+      const checkForUpstream = () => {
+        const titles = document.querySelectorAll('[data-testid="linked-column-title"]');
+        let upstreamTitle = null;
+        for (const t of titles) {
+          if (t.innerText.trim() === 'Upstream') {
+            upstreamTitle = t;
+            break;
+          }
+        }
+
+        if (upstreamTitle) {
+          const column = upstreamTitle.closest('.linked-pipelines-column');
+          if (column) {
+            const pipelineLink = column.querySelector('a[data-testid="pipelineLink"]');
+            if (pipelineLink) {
+              const parentIdText = pipelineLink.innerText.trim();
+              if (parentIdText.startsWith('#')) {
+                const parentId = parentIdText.substring(1);
+                const parentPipeline = history.find(p => p.id && p.id.toString() === parentId);
+                if (parentPipeline) {
+                  // Intentional removal to avoid bugs for now
+                  const btn = document.getElementById('gitlab-pipeline-tracker-btn');
+                  if (btn) btn.remove();
+
+                  console.log(`PipelineViewTracker: Mapping downstream pipeline ${id} to tracked upstream pipeline ${parentId}`);
+                  PipelineRepository.addPipelineMapping(id, parentId);
+                  PipelineViewTracker.renderLabelUnderTitle(parentPipeline, true);
+                  PipelineViewTracker.renderTriggeredByText(parentId, history);
+                  return true;
+                }
+              }
+            }
+          }
+        }
+        return false;
+      };
+
+      if (checkForUpstream()) return;
+
+      const observer = new MutationObserver((mutations, obs) => {
+        if (checkForUpstream()) {
+          obs.disconnect();
+        }
+      });
+
+      observer.observe(document.body, { childList: true, subtree: true });
+      setTimeout(() => observer.disconnect(), 10000);
+    });
+  },
+
+  renderTriggeredByText: (parentId, history) => {
+    if (document.getElementById('pipeline-tracker-downstream-label')) return;
+
+    Utils.waitForElement('[data-testid="pipeline-title"]', (title) => {
+      if (document.getElementById('pipeline-tracker-downstream-label')) return;
+
+      const parentPipeline = history.find(p => p.id && p.id.toString() === parentId);
+      const parentUrl = parentPipeline && parentPipeline.url ? parentPipeline.url : '#';
+
+      const container = document.createElement('div');
+      container.id = 'pipeline-tracker-downstream-label';
+      container.style.display = 'flex';
+      container.style.alignItems = 'center';
+      container.style.marginTop = '4px';
+
+      const labelEl = document.createElement('span');
+      labelEl.innerHTML = `Triggered by tracked pipeline <span class="pipeline-tracker-parent-link" style="color: #00bcd4; text-decoration: underline; cursor: pointer;">#${parentId}</span>`;
+      labelEl.style.color = '#00bcd4';
+      labelEl.style.fontSize = '14px';
+      labelEl.style.fontWeight = 'bold';
+      labelEl.style.marginRight = '8px';
+      labelEl.style.fontStyle = 'italic';
+
+      const parentLink = labelEl.querySelector('.pipeline-tracker-parent-link');
+      if (parentLink) {
+        parentLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          window.open(parentUrl, '_blank');
+        });
+      }
+
+      container.appendChild(labelEl);
+      title.parentNode.insertBefore(container, title.nextSibling);
     });
   },
 
@@ -232,7 +335,7 @@ const PipelineViewTracker = {
     }
   },
 
-  renderLabelUnderTitle: (entry) => {
+  renderLabelUnderTitle: (entry, isDownstream = false) => {
     // Allows empty label now so we can show "Add Label"
     if (document.getElementById('pipeline-tracker-header-label')) return;
 
@@ -242,6 +345,9 @@ const PipelineViewTracker = {
       container.style.display = 'flex';
       container.style.alignItems = 'center';
       container.style.marginTop = '4px';
+      if (isDownstream) {
+        container.style.opacity = '0.5';
+      }
 
       const labelEl = document.createElement('span');
       labelEl.innerText = entry.label || 'Add Label';
@@ -315,6 +421,9 @@ const PipelineViewTracker = {
       badgesContainer.style.flexWrap = 'wrap';
       badgesContainer.style.marginTop = '4px';
       badgesContainer.style.gap = '4px';
+      if (isDownstream) {
+        badgesContainer.style.opacity = '0.5';
+      }
 
       const renderBadges = () => {
         badgesContainer.innerHTML = BadgeRowRenderer.createRowHTML(entry);

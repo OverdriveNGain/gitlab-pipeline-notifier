@@ -200,16 +200,26 @@ const PipelineViewTracker = {
       document.body.appendChild(container);
     }
 
-    container.innerHTML = ''; // Clear previous if any
-
     // Clean status for evaluation
     const s = currentStatusText ? currentStatusText.toLowerCase() : '';
     const isActive = s === 'running' || s === 'pending' || s === 'preparing' || s === 'created';
 
     // If the pipeline is over, do not show the notification tracking widget at all!
     if (!isActive) {
+      container.innerHTML = ''; // Clear if not active
+      container.dataset.currentState = '';
       return;
     }
+
+    console.log(`[GitLab Pipeline Notifier] showFloatingNotificationStatus - id: ${id}, state: ${state}, currentState: ${container.dataset.currentState}, hasHTML: ${container.innerHTML !== ''}`);
+
+    // Prevent re-rendering and re-animating if the state hasn't changed
+    if (container.dataset.currentState === state && container.innerHTML !== '') {
+      return;
+    }
+
+    container.innerHTML = ''; // Clear previous if any
+    container.dataset.currentState = state;
 
     const notif = document.createElement('div');
     notif.style.cssText = `

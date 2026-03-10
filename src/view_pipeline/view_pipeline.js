@@ -130,6 +130,13 @@ const PipelineViewTracker = {
 
         currentStatus = status;
         PipelineRepository.updateStatus(id, status);
+
+        // Re-evaluate showing the badge in case it just transitioned to a finished state!
+        PipelineRepository.getHistory((history) => {
+          const isTracked = history.some(p => p.id.toString() === id.toString());
+          const stateStr = isTracked ? 'TRACKED' : (PipelineViewTracker._shouldNotify ? 'NOTIFY_ONLY' : 'UNTRACKED');
+          PipelineViewTracker.showFloatingNotificationStatus(id, stateStr, status);
+        });
       } else {
         console.log(`[GitLab Pipeline Notifier] Checking status for pipeline #${id}: Status not determined yet.`);
       }
@@ -141,36 +148,41 @@ const PipelineViewTracker = {
   },
 
   displayPipelineInfo: (id) => {
-    PipelineRepository.getHistory((history) => {
-      const entry = history.find(p => p.id.toString() === id.toString());
-      if (entry) {
-        const btn = document.getElementById('gitlab-pipeline-tracker-btn');
-        if (btn) btn.remove();
+    // Ensure the DOM has properly loaded the real status before assuming and drawing widgets!
+    Utils.waitForElement(TRACKER_SELECTORS.pipelineStatus, (statusEl) => {
+      const initialStatus = statusEl.innerText.trim();
 
-        PipelineViewTracker.renderVariableWidget(entry);
-        PipelineViewTracker.renderLabelUnderTitle(entry);
-        PipelineViewTracker.checkLinkedPipelinesMapping(id, history, true);
-        PipelineViewTracker._shouldNotify = true;
-        PipelineViewTracker.showFloatingNotificationStatus(id, 'TRACKED');
-        PipelineRepository.removeNotifyOnlyPipeline(id); // Cleanup if explicitly tracked
-      } else {
-        PipelineRepository.getNotifyOnlyPipelines((notifyMap) => {
-          PipelineViewTracker.renderTrackPipelineButton(id);
-          PipelineViewTracker.checkLinkedPipelinesMapping(id, history, false);
+      PipelineRepository.getHistory((history) => {
+        const entry = history.find(p => p.id.toString() === id.toString());
+        if (entry) {
+          const btn = document.getElementById('gitlab-pipeline-tracker-btn');
+          if (btn) btn.remove();
 
-          if (notifyMap[id]) {
-            PipelineViewTracker._shouldNotify = true;
-            PipelineViewTracker.showFloatingNotificationStatus(id, 'NOTIFY_ONLY');
-          } else {
-            PipelineViewTracker._shouldNotify = false;
-            PipelineViewTracker.showFloatingNotificationStatus(id, 'UNTRACKED');
-          }
-        });
-      }
+          PipelineViewTracker.renderVariableWidget(entry);
+          PipelineViewTracker.renderLabelUnderTitle(entry);
+          PipelineViewTracker.checkLinkedPipelinesMapping(id, history, true);
+          PipelineViewTracker._shouldNotify = true;
+          PipelineViewTracker.showFloatingNotificationStatus(id, 'TRACKED', initialStatus);
+          PipelineRepository.removeNotifyOnlyPipeline(id); // Cleanup if explicitly tracked
+        } else {
+          PipelineRepository.getNotifyOnlyPipelines((notifyMap) => {
+            PipelineViewTracker.renderTrackPipelineButton(id);
+            PipelineViewTracker.checkLinkedPipelinesMapping(id, history, false);
+
+            if (notifyMap[id]) {
+              PipelineViewTracker._shouldNotify = true;
+              PipelineViewTracker.showFloatingNotificationStatus(id, 'NOTIFY_ONLY', initialStatus);
+            } else {
+              PipelineViewTracker._shouldNotify = false;
+              PipelineViewTracker.showFloatingNotificationStatus(id, 'UNTRACKED', initialStatus);
+            }
+          });
+        }
+      });
     });
   },
 
-  showFloatingNotificationStatus: (id, state) => {
+  showFloatingNotificationStatus: (id, state, currentStatusText) => {
     let container = document.getElementById('gl-pipeline-notifier-status');
     if (!container) {
       container = document.createElement('div');
@@ -189,6 +201,15 @@ const PipelineViewTracker = {
     }
 
     container.innerHTML = ''; // Clear previous if any
+
+    // Clean status for evaluation
+    const s = currentStatusText ? currentStatusText.toLowerCase() : '';
+    const isActive = s === 'running' || s === 'pending' || s === 'preparing' || s === 'created';
+
+    // If the pipeline is over, do not show the notification tracking widget at all!
+    if (!isActive) {
+      return;
+    }
 
     const notif = document.createElement('div');
     notif.style.cssText = `
@@ -258,7 +279,7 @@ const PipelineViewTracker = {
 
       notif.querySelector('.notify-click-target').addEventListener('click', () => {
         PipelineViewTracker._shouldNotify = true;
-        PipelineViewTracker.showFloatingNotificationStatus(id, 'NOTIFY_ONLY');
+        PipelineViewTracker.showFloatingNotificationStatus(id, 'NOTIFY_ONLY', currentStatusText);
         PipelineRepository.addNotifyOnlyPipeline(id);
       });
     }
@@ -474,7 +495,7 @@ const PipelineViewTracker = {
       PipelineViewTracker.renderVariableWidget(entry);
       PipelineViewTracker.renderLabelUnderTitle(entry);
       PipelineViewTracker._shouldNotify = true;
-      PipelineViewTracker.showFloatingNotificationStatus(id, 'TRACKED');
+      PipelineViewTracker.showFloatingNotificationStatus(id, 'TRACKED', status);
     });
   },
 

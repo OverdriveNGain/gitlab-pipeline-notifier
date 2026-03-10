@@ -95,16 +95,17 @@ const PipelineViewTracker = {
 
         PipelineViewTracker.renderVariableWidget(entry);
         PipelineViewTracker.renderLabelUnderTitle(entry);
+        PipelineViewTracker.checkLinkedPipelinesMapping(id, history, true);
       } else {
         PipelineViewTracker.renderTrackPipelineButton(id);
-        PipelineViewTracker.checkUpstreamMapping(id, history);
+        PipelineViewTracker.checkLinkedPipelinesMapping(id, history, false);
       }
     });
   },
 
-  checkUpstreamMapping: (id, history) => {
+  checkLinkedPipelinesMapping: (id, history, isCurrentPipelineTracked) => {
     PipelineRepository.getPipelineMapping((mapping) => {
-      if (mapping[id]) {
+      if (!isCurrentPipelineTracked && mapping[id]) {
         const parentId = mapping[id];
         const parentPipeline = history.find(p => p.id && p.id.toString() === parentId);
         if (parentPipeline) {
@@ -118,49 +119,71 @@ const PipelineViewTracker = {
         }
       }
 
-      const checkForUpstream = () => {
+      let hasProcessedUpstream = false;
+      let hasProcessedDownstream = false;
+
+      const checkLinkedUI = () => {
         const titles = document.querySelectorAll('[data-testid="linked-column-title"]');
-        let upstreamTitle = null;
+
         for (const t of titles) {
-          if (t.innerText.trim() === 'Upstream') {
-            upstreamTitle = t;
-            break;
-          }
-        }
+          const titleText = t.innerText.trim();
 
-        if (upstreamTitle) {
-          const column = upstreamTitle.closest('.linked-pipelines-column');
-          if (column) {
-            const pipelineLink = column.querySelector('a[data-testid="pipelineLink"]');
-            if (pipelineLink) {
-              const parentIdText = pipelineLink.innerText.trim();
-              if (parentIdText.startsWith('#')) {
-                const parentId = parentIdText.substring(1);
-                const parentPipeline = history.find(p => p.id && p.id.toString() === parentId);
-                if (parentPipeline) {
-                  // Intentional removal to avoid bugs for now
-                  const btn = document.getElementById('gitlab-pipeline-tracker-btn');
-                  if (btn) btn.remove();
+          if (!isCurrentPipelineTracked && !hasProcessedUpstream && titleText === 'Upstream') {
+            const column = t.closest('.linked-pipelines-column');
+            if (column) {
+              const pipelineLink = column.querySelector('a[data-testid="pipelineLink"]');
+              if (pipelineLink) {
+                const parentIdText = pipelineLink.innerText.trim();
+                if (parentIdText.startsWith('#')) {
+                  const parentId = parentIdText.substring(1);
+                  const parentPipeline = history.find(p => p.id && p.id.toString() === parentId);
+                  if (parentPipeline) {
+                    const btn = document.getElementById('gitlab-pipeline-tracker-btn');
+                    if (btn) btn.remove();
 
-                  console.log(`PipelineViewTracker: Mapping downstream pipeline ${id} to tracked upstream pipeline ${parentId}`);
-                  PipelineRepository.addPipelineMapping(id, parentId);
-                  PipelineViewTracker.renderLabelUnderTitle(parentPipeline, true);
-                  PipelineViewTracker.renderTriggeredByText(parentId, history);
-                  return true;
+                    console.log(`PipelineViewTracker: Mapping downstream pipeline ${id} to tracked upstream pipeline ${parentId}`);
+                    PipelineRepository.addPipelineMapping(id, parentId);
+                    PipelineViewTracker.renderLabelUnderTitle(parentPipeline, true);
+                    PipelineViewTracker.renderTriggeredByText(parentId, history);
+
+                    hasProcessedUpstream = true;
+                  }
                 }
               }
             }
           }
+
+          if (isCurrentPipelineTracked && !hasProcessedDownstream && titleText === 'Downstream') {
+            const column = t.closest('.linked-pipelines-column');
+            if (column) {
+              const pipelineLinks = column.querySelectorAll('a[data-testid="pipelineLink"]');
+              if (pipelineLinks.length > 0) {
+                pipelineLinks.forEach(link => {
+                  const childIdText = link.innerText.trim();
+                  if (childIdText.startsWith('#')) {
+                    const childId = childIdText.substring(1);
+                    if (mapping[childId] !== id) {
+                      console.log(`PipelineViewTracker: Mapping downstream pipeline ${childId} to tracked parent pipeline ${id}`);
+                      PipelineRepository.addPipelineMapping(childId, id);
+                      mapping[childId] = id; // update in memory locally to prevent redundancy
+                    }
+                  }
+                });
+                hasProcessedDownstream = true;
+              }
+            }
+          }
         }
-        return false;
+
+        return (isCurrentPipelineTracked ? hasProcessedDownstream : true) && (!isCurrentPipelineTracked ? hasProcessedUpstream : true);
       };
 
-      if (checkForUpstream()) return;
+      // Perform an initial check
+      checkLinkedUI();
 
       const observer = new MutationObserver((mutations, obs) => {
-        if (checkForUpstream()) {
-          obs.disconnect();
-        }
+        // We evaluate continuously until the observer timeout
+        checkLinkedUI();
       });
 
       observer.observe(document.body, { childList: true, subtree: true });

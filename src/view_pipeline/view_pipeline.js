@@ -1,4 +1,6 @@
 const PipelineViewTracker = {
+  _shouldNotify: false,
+
   init: () => {
     const pipelineId = PipelineViewTracker.getPipelineIdFromUrl();
 
@@ -73,11 +75,63 @@ const PipelineViewTracker = {
   },
 
   trackStatus: (id) => {
-    const check = () => {
-      const statusEl = document.querySelector(TRACKER_SELECTORS.pipelineStatus);
-      if (statusEl) {
-        const status = statusEl.innerText.trim();
+    let currentStatus = null;
+
+    const check = async () => {
+      let status = null;
+
+      // GitLab's frontend halts UI polling when the tab is out of focus (hidden).
+      // We must query the GitLab API directly to detect status changes in the background!
+      if (document.hidden) {
+        try {
+          const projectPath = encodeURIComponent(PipelineViewTracker.getProjectPath());
+          const res = await fetch(`${window.location.origin}/api/v4/projects/${projectPath}/pipelines/${id}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.status) {
+              const apiStatus = data.status.toLowerCase();
+              // Normalize API syntax to match GitLab UI DOM syntax
+              if (apiStatus === 'success') {
+                status = 'Passed';
+              } else {
+                status = apiStatus.charAt(0).toUpperCase() + apiStatus.slice(1);
+              }
+            }
+          }
+        } catch (e) {
+          console.error('[GitLab Pipeline Notifier] API fetch failed:', e);
+        }
+      }
+
+      // Fallback to the standard DOM check if visible or API failed
+      if (!status) {
+        const statusEl = document.querySelector(TRACKER_SELECTORS.pipelineStatus);
+        if (statusEl) {
+          status = statusEl.innerText.trim();
+        }
+      }
+
+      if (status) {
+        console.log(`[GitLab Pipeline Notifier] Checking status for pipeline #${id}: currentStatus = ${currentStatus}, newStatus = ${status}`);
+
+        if (currentStatus !== null && currentStatus !== status) {
+          if (PipelineViewTracker._shouldNotify) {
+            try {
+              chrome.runtime.sendMessage({
+                type: 'PIPELINE_NOTIFICATION',
+                title: `Pipeline #${id} Update`,
+                body: `Status changed to: ${status}`
+              });
+            } catch (e) {
+              console.error('GitLab Pipeline Notifier: Failed to send notification', e);
+            }
+          }
+        }
+
+        currentStatus = status;
         PipelineRepository.updateStatus(id, status);
+      } else {
+        console.log(`[GitLab Pipeline Notifier] Checking status for pipeline #${id}: Status not determined yet.`);
       }
     };
 
@@ -96,11 +150,135 @@ const PipelineViewTracker = {
         PipelineViewTracker.renderVariableWidget(entry);
         PipelineViewTracker.renderLabelUnderTitle(entry);
         PipelineViewTracker.checkLinkedPipelinesMapping(id, history, true);
+        PipelineViewTracker._shouldNotify = true;
+        PipelineViewTracker.showFloatingNotificationStatus(id, 'TRACKED');
+        PipelineRepository.removeNotifyOnlyPipeline(id); // Cleanup if explicitly tracked
       } else {
-        PipelineViewTracker.renderTrackPipelineButton(id);
-        PipelineViewTracker.checkLinkedPipelinesMapping(id, history, false);
+        PipelineRepository.getNotifyOnlyPipelines((notifyMap) => {
+          PipelineViewTracker.renderTrackPipelineButton(id);
+          PipelineViewTracker.checkLinkedPipelinesMapping(id, history, false);
+
+          if (notifyMap[id]) {
+            PipelineViewTracker._shouldNotify = true;
+            PipelineViewTracker.showFloatingNotificationStatus(id, 'NOTIFY_ONLY');
+          } else {
+            PipelineViewTracker._shouldNotify = false;
+            PipelineViewTracker.showFloatingNotificationStatus(id, 'UNTRACKED');
+          }
+        });
       }
     });
+  },
+
+  showFloatingNotificationStatus: (id, state) => {
+    let container = document.getElementById('gl-pipeline-notifier-status');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'gl-pipeline-notifier-status';
+      container.style.cssText = `
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        pointer-events: none;
+      `;
+      document.body.appendChild(container);
+    }
+
+    container.innerHTML = ''; // Clear previous if any
+
+    const notif = document.createElement('div');
+    notif.style.cssText = `
+      pointer-events: auto;
+      background-color: var(--gl-surface-color, #ffffff);
+      border: 1px solid var(--gl-border-color, #dbd7e6);
+      border-radius: 4px;
+      padding: 12px 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      animation: jobLogSlideIn 0.3s ease-out;
+      color: var(--gl-text-color, #333238);
+      font-size: 14px;
+    `;
+
+    if (!document.getElementById('jobLogAnimations')) {
+      const style = document.createElement('style');
+      style.id = 'jobLogAnimations';
+      style.innerHTML = `
+        @keyframes jobLogSlideIn {
+          from { transform: translateX(100%); opacity: 0; }
+          to { transform: translateX(0); opacity: 1; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    if (state === 'TRACKED') {
+      notif.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:center; width: 24px; height: 24px; background: rgba(16,133,72,0.1); border-radius: 50%; color: #108548;">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+            <path d="M14.207 4.293a1 1 0 0 0-1.414-1.414L6.5 9.172 3.707 6.379a1 1 0 1 0-1.414 1.414l3.5 3.5a1 1 0 0 0 1.414 0l7-7z"/>
+          </svg>
+        </div>
+        <div>
+          <strong>Notifying on Status Change</strong> <span style="cursor: pointer; color: var(--gl-text-color-secondary, #737278); text-decoration: underline; font-size: 12px; margin-left: 4px;" class="test-notify-btn" title="Send test notification">(Test Notification)</span><br/>
+          <span style="font-size: 12px; color: var(--gl-text-color-secondary, #737278);">A notification will be sent upon tracked pipeline status change</span>
+        </div>
+      `;
+    } else if (state === 'NOTIFY_ONLY') {
+      notif.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:center; width: 24px; height: 24px; background: rgba(16,133,72,0.1); border-radius: 50%; color: #108548;">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+            <path d="M14.207 4.293a1 1 0 0 0-1.414-1.414L6.5 9.172 3.707 6.379a1 1 0 1 0-1.414 1.414l3.5 3.5a1 1 0 0 0 1.414 0l7-7z"/>
+          </svg>
+        </div>
+        <div>
+          <strong>Notifying on Status Change</strong> <span style="cursor: pointer; color: var(--gl-text-color-secondary, #737278); text-decoration: underline; font-size: 12px; margin-left: 4px;" class="test-notify-btn" title="Send test notification">(Test Notification)</span><br/>
+          <span style="font-size: 12px; color: var(--gl-text-color-secondary, #737278);">A notification will be sent upon untracked pipeline status change</span>
+        </div>
+      `;
+    } else {
+      notif.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:center; width: 24px; height: 24px; background: rgba(115,114,120,0.1); border-radius: 50%; color: #737278;">
+          <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
+            <path d="M8 1.5a6.5 6.5 0 1 0 0 13 6.5 6.5 0 0 0 0-13zM0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8z" clip-rule="evenodd" fill-rule="evenodd"/>
+            <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3.5a.5.5 0 0 1-.5-.5v-4A.5.5 0 0 1 8 4z"/>
+          </svg>
+        </div>
+        <div style="cursor: pointer;" class="notify-click-target">
+          <strong>Not Tracking Status</strong><br/>
+          <span style="font-size: 12px; color: var(--gl-text-blue-500, #1f75cb); text-decoration: underline;">Notify me on status change</span>
+        </div>
+      `;
+
+      notif.querySelector('.notify-click-target').addEventListener('click', () => {
+        PipelineViewTracker._shouldNotify = true;
+        PipelineViewTracker.showFloatingNotificationStatus(id, 'NOTIFY_ONLY');
+        PipelineRepository.addNotifyOnlyPipeline(id);
+      });
+    }
+
+    const testBtn = notif.querySelector('.test-notify-btn');
+    if (testBtn) {
+      testBtn.addEventListener('click', () => {
+        try {
+          chrome.runtime.sendMessage({
+            type: 'PIPELINE_NOTIFICATION',
+            title: `Pipeline #${id} Test notification`,
+            body: 'Focus test triggered successfully!'
+          });
+        } catch (e) {
+          console.error('GitLab Pipeline Notifier: Failed to send test notification', e);
+        }
+      });
+    }
+
+    container.appendChild(notif);
   },
 
   checkLinkedPipelinesMapping: (id, history, isCurrentPipelineTracked) => {
@@ -292,7 +470,11 @@ const PipelineViewTracker = {
 
     PipelineRepository.addPipeline(entry, () => {
       console.log('GitLab Pipeline Tracker: Manually tracked pipeline');
+      PipelineRepository.removeNotifyOnlyPipeline(id);
       PipelineViewTracker.renderVariableWidget(entry);
+      PipelineViewTracker.renderLabelUnderTitle(entry);
+      PipelineViewTracker._shouldNotify = true;
+      PipelineViewTracker.showFloatingNotificationStatus(id, 'TRACKED');
     });
   },
 

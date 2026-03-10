@@ -88,5 +88,30 @@ const PipelineRepository = {
       mapping[childId] = parentId;
       PipelineRepository.savePipelineMapping(mapping, callback);
     });
+  },
+
+  // Notify Only Logic
+  getNotifyOnlyPipelines: (callback) => {
+    chrome.storage.local.get('notify_only_pipelines', (result) => {
+      callback(result.notify_only_pipelines || {});
+    });
+  },
+
+  saveNotifyOnlyPipelines: (map, callback) => {
+    chrome.storage.local.set({ 'notify_only_pipelines': map }, callback);
+  },
+
+  addNotifyOnlyPipeline: (pipelineId, callback) => {
+    PipelineRepository.getNotifyOnlyPipelines((map) => {
+      map[pipelineId] = Date.now();
+      PipelineRepository.saveNotifyOnlyPipelines(map, callback);
+    });
+  },
+
+  removeNotifyOnlyPipeline: (pipelineId, callback) => {
+    PipelineRepository.getNotifyOnlyPipelines((map) => {
+      delete map[pipelineId];
+      PipelineRepository.saveNotifyOnlyPipelines(map, callback);
+    });
   }
 };

@@ -82,12 +82,25 @@ const NewPipelineTracker = {
     rows.forEach(row => {
       const keyInput = row.querySelector(TRACKER_SELECTORS.variableKey);
       const valueInput = row.querySelector(TRACKER_SELECTORS.variableValue);
+      const valueDropdownText = row.querySelector(TRACKER_SELECTORS.variableValueDropdown);
+      const typeDropdownText = row.querySelector(TRACKER_SELECTORS.variableTypeDropdown);
 
-      if (keyInput && valueInput) {
+      if (keyInput) {
         const key = keyInput.value.trim();
-        const value = valueInput.value;
+        let value = '';
+        if (valueInput) {
+          value = valueInput.value;
+        } else if (valueDropdownText) {
+          value = valueDropdownText.innerText.trim();
+        }
+
+        let variableType = 'Variable';
+        if (typeDropdownText) {
+          variableType = typeDropdownText.innerText.trim();
+        }
+
         if (key) {
-          vars.push({ key, value });
+          vars.push({ key, value, variableType });
         }
       }
     });

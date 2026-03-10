@@ -58,7 +58,11 @@ document.addEventListener('DOMContentLoaded', () => {
           if (pipeline.variables && pipeline.variables.length > 0) {
             pipeline.variables.forEach(v => {
               if (v.key) {
-                url.searchParams.append(`var[${v.key}]`, v.value || '');
+                if (v.variableType === 'File') {
+                  url.searchParams.append(`file_var[${v.key}]`, v.value || '');
+                } else {
+                  url.searchParams.append(`var[${v.key}]`, v.value || '');
+                }
               }
             });
           }

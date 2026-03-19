@@ -63,12 +63,21 @@
         "*://*/merge_requests/*",
         "*://*/-/merge_requests/*",
         "*://*/*/merge_requests/*",
-        "*://*/*/-/merge_requests/*"
+        "*://*/*/-/merge_requests/*",
+        "*://*/*/*/merge_requests/*",
+        "*://*/*/*/-/merge_requests/*",
+        "*://*/*/*/*/merge_requests/*",
+        "*://*/*/*/*/-/merge_requests/*",
+        "*://*/*/*/*/*/merge_requests/*",
+        "*://*/*/*/*/*/-/merge_requests/*",
+        "*://*/*/*/*/*/*/merge_requests/*",
+        "*://*/*/*/*/*/*/-/merge_requests/*"
       ],
       "js": [
         "src/common/utils.js",
         "src/merge_request/selectors.js",
         "src/merge_request/mr_tracker.js",
+        "src/merge_request/diff_tracker.js",
         "src/merge_request/main.js"
       ],
       "css": [

@@ -1,1 +1,2 @@
 MergeRequestTracker.init();
+DiffTracker.init();

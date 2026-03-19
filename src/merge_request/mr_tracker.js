@@ -34,14 +34,16 @@ const MergeRequestTracker = {
 
   attachKeyListener: () => {
     document.addEventListener('keydown', (e) => {
-      if (e.key.toLowerCase() === 'h' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const key = e.key.toLowerCase();
+      if (key === 'h' && !e.ctrlKey && !e.metaKey && !e.altKey) {
         const activeTagName = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
         if (activeTagName !== 'input' && activeTagName !== 'textarea' && !document.activeElement.isContentEditable) {
           e.preventDefault();
+          e.stopImmediatePropagation();
           MergeRequestTracker.copyMRTitle();
         }
       }
-    });
+    }, true);
   },
 
   copyMRTitle: () => {

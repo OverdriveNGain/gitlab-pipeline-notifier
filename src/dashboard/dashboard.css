@@ -68,6 +68,33 @@ h1 {
     font-weight: 600;
 }
 
+.tabs-header {
+    display: flex;
+    border-bottom: 1px solid var(--gl-border-color);
+    background-color: #292929;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    color: var(--gl-text-secondary);
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+}
+
+.tab-btn:hover {
+    color: var(--gl-text-color);
+    background-color: rgba(255,255,255,0.05);
+}
+
+.tab-btn.active {
+    color: var(--gl-primary-color);
+    border-bottom-color: var(--gl-primary-color);
+}
+
 .pipeline-list-container {
     padding: 16px;
     flex: 1;

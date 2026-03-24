@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>GitLab Pipeline History</title>
+  <title>GitLab+</title>
   <link rel="stylesheet" href="../common/styles.css">
   <link rel="stylesheet" href="dashboard.css">
 </head>
@@ -14,15 +14,19 @@
     <header class="app-header">
       <div class="header-content">
         <img src="../../icons/icon48.png" alt="Logo" class="app-logo">
-        <h1>Pipeline History</h1>
+        <h1>GitLab+</h1>
       </div>
       <div class="header-actions">
-        <button id="openFullScreenBtn" class="btn btn-secondary" style="margin-right: 8px;">Open Full Screen</button>
-        <button id="clearHistoryBtn" class="btn btn-danger">Clear History</button>
+        <button id="openFullScreenBtn" class="btn btn-secondary">Open Full Screen</button>
       </div>
     </header>
 
-    <main class="pipeline-list-container">
+    <div class="tabs-header">
+      <button id="tabPipelines" class="tab-btn active">Pipelines</button>
+      <button id="tabReviews" class="tab-btn">Reviews</button>
+    </div>
+
+    <main id="contentPipelines" class="pipeline-list-container active-tab">
       <div class="controls">
         <input type="text" id="searchInput" placeholder="Search pipelines..." class="form-input">
         <select id="statusFilter" class="form-select">
@@ -31,6 +35,7 @@
           <option value="failed">Failed</option>
           <option value="running">Running</option>
         </select>
+        <button id="clearHistoryBtn" class="btn btn-danger">Clear History</button>
       </div>
 
       <ul id="pipelineList" class="pipeline-list">
@@ -39,6 +44,12 @@
           <p>No pipeline history found.</p>
         </li>
       </ul>
+    </main>
+
+    <main id="contentReviews" class="pipeline-list-container" style="display: none;">
+      <div style="padding: 16px; color: var(--gl-text-color);">
+        Reviews
+      </div>
     </main>
   </div>
 

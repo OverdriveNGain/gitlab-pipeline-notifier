@@ -4,6 +4,27 @@ document.addEventListener('DOMContentLoaded', () => {
   const clearHistoryBtn = document.getElementById('clearHistoryBtn');
   const openFullScreenBtn = document.getElementById('openFullScreenBtn');
 
+  // Tabs
+  const tabPipelines = document.getElementById('tabPipelines');
+  const tabReviews = document.getElementById('tabReviews');
+  const contentPipelines = document.getElementById('contentPipelines');
+  const contentReviews = document.getElementById('contentReviews');
+
+  if (tabPipelines && tabReviews) {
+    tabPipelines.addEventListener('click', () => {
+      tabPipelines.classList.add('active');
+      tabReviews.classList.remove('active');
+      contentPipelines.style.display = '';
+      contentReviews.style.display = 'none';
+    });
+    tabReviews.addEventListener('click', () => {
+      tabReviews.classList.add('active');
+      tabPipelines.classList.remove('active');
+      contentReviews.style.display = '';
+      contentPipelines.style.display = 'none';
+    });
+  }
+
   // Check if we are already in full screen mode
   const isFullScreen = new URLSearchParams(window.location.search).get('mode') === 'fullscreen';
   if (isFullScreen) {

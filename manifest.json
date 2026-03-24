@@ -75,9 +75,11 @@
       ],
       "js": [
         "src/common/utils.js",
+        "src/common/repository.js",
         "src/merge_request/selectors.js",
         "src/merge_request/mr_tracker.js",
         "src/merge_request/diff_tracker.js",
+        "src/merge_request/reviews_tracker.js",
         "src/merge_request/main.js"
       ],
       "css": [

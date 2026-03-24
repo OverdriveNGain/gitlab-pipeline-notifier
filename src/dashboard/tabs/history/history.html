@@ -1,0 +1,19 @@
+<div class="controls">
+  <input type="text" id="searchInput" placeholder="Search pipelines..." class="form-input">
+  <select id="statusFilter" class="form-select">
+    <option value="all">All Statuses</option>
+    <option value="passed">Passed</option>
+    <option value="failed">Failed</option>
+    <option value="running">Running</option>
+  </select>
+  <button id="clearHistoryBtn" class="btn btn-danger">Clear History</button>
+</div>
+
+<div class="pipeline-list-container">
+  <ul id="pipelineList" class="pipeline-list">
+    <!-- Pipelines will be injected here -->
+    <li class="empty-state">
+      <p>No pipeline history found.</p>
+    </li>
+  </ul>
+</div>

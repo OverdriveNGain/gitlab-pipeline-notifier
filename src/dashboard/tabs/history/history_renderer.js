@@ -1,4 +1,4 @@
-const DashboardRenderer = {
+const HistoryRenderer = {
   renderList: (pipelines, containerId = 'pipelineList', onLabelChange, onDelete, onRerun) => {
     const container = document.getElementById(containerId);
     if (!container) return;
@@ -13,19 +13,15 @@ const DashboardRenderer = {
     pipelines.forEach(pipeline => {
       const li = document.createElement('li');
       li.className = 'pipeline-item';
-      li.innerHTML = DashboardRenderer.createPipelineItemHTML(pipeline);
+      li.innerHTML = HistoryRenderer.createPipelineItemHTML(pipeline);
       container.appendChild(li);
     });
 
     // Add listeners for label inputs
-    DashboardRenderer.attachLabelListeners(onLabelChange);
+    HistoryRenderer.attachLabelListeners(onLabelChange);
 
     // Add listeners for badges
-    DashboardRenderer.attachBadgeListeners(onLabelChange); // Re-using onLabelChange trigger to refresh list if needed, or we implement specific callbacks. 
-    // Actually, updatePipeline calls saveHistory, but doesn't auto-refresh the list unless we reload. 
-    // We should probably pass a callback to refresh the UI.
-    // For now, let's assume we can reload the list or update the DOM directly.
-    // Ideally, `renderList` is called again.
+    HistoryRenderer.attachBadgeListeners(onLabelChange);
 
     // Add listeners for delete buttons
     if (onDelete) {
@@ -50,7 +46,7 @@ const DashboardRenderer = {
     }
 
     // Add listeners for time hovering
-    DashboardRenderer.attachTimeListeners(container);
+    HistoryRenderer.attachTimeListeners(container);
   },
 
   createPipelineItemHTML: (pipeline) => {
@@ -65,7 +61,7 @@ const DashboardRenderer = {
     // Variables Section
     let varsHtml = '';
     if (pipeline.variables && pipeline.variables.length > 0) {
-      varsHtml = DashboardRenderer.createVariablesHTML(pipeline.variables);
+      varsHtml = HistoryRenderer.createVariablesHTML(pipeline.variables);
     }
 
     let rerunBtnHtml = '';

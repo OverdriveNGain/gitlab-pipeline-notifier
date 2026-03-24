@@ -115,3 +115,47 @@ const PipelineRepository = {
     });
   }
 };
+
+const ReviewRepository = {
+  getHistory: (callback) => {
+    chrome.storage.local.get('review_history', (result) => {
+      callback(result.review_history || []);
+    });
+  },
+
+  saveHistory: (history, callback) => {
+    chrome.storage.local.set({ 'review_history': history }, callback);
+  },
+
+  addReviewActivity: (activity, callback) => {
+    /* 
+      activity schema:
+      {
+        timestamp: string (ISO string or similar),
+        type: 'approved' | 'revoked' | 'commented' | 'thread_started' | 'thread_resolved',
+        count?: number, // for batch comments
+        repoName: string,
+        mrId: string,
+        mrTitle: string,
+        author: string
+      }
+    */
+    ReviewRepository.getHistory((history) => {
+      history.unshift(activity);
+      // Limit to last 200 review events
+      if (history.length > 200) history.pop();
+      ReviewRepository.saveHistory(history, callback);
+    });
+  },
+
+  deleteReviewActivity: (timestamp, mrId, repoName, callback) => {
+    ReviewRepository.getHistory((history) => {
+      const newHistory = history.filter(a => !(a.timestamp === timestamp && a.mrId === mrId && a.repoName === repoName));
+      ReviewRepository.saveHistory(newHistory, callback);
+    });
+  },
+
+  clearHistory: (callback) => {
+    chrome.storage.local.remove('review_history', callback);
+  }
+};

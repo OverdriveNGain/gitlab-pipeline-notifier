@@ -7,6 +7,8 @@
   <title>GitLab+</title>
   <link rel="stylesheet" href="../common/styles.css">
   <link rel="stylesheet" href="dashboard.css">
+  <link rel="stylesheet" href="tabs/history/history.css">
+  <link rel="stylesheet" href="tabs/reviews/reviews.css">
 </head>
 
 <body class="gl-dark">
@@ -26,31 +28,9 @@
       <button id="tabReviews" class="tab-btn">Reviews</button>
     </div>
 
-    <main id="contentPipelines" class="pipeline-list-container active-tab">
-      <div class="controls">
-        <input type="text" id="searchInput" placeholder="Search pipelines..." class="form-input">
-        <select id="statusFilter" class="form-select">
-          <option value="all">All Statuses</option>
-          <option value="passed">Passed</option>
-          <option value="failed">Failed</option>
-          <option value="running">Running</option>
-        </select>
-        <button id="clearHistoryBtn" class="btn btn-danger">Clear History</button>
-      </div>
+    <main id="contentPipelines" class="pipeline-list-container active-tab"></main>
 
-      <ul id="pipelineList" class="pipeline-list">
-        <!-- Pipelines will be injected here -->
-        <li class="empty-state">
-          <p>No pipeline history found.</p>
-        </li>
-      </ul>
-    </main>
-
-    <main id="contentReviews" class="pipeline-list-container" style="display: none;">
-      <div style="padding: 16px; color: var(--gl-text-color);">
-        Reviews
-      </div>
-    </main>
+    <main id="contentReviews" class="pipeline-list-container" style="display: none;"></main>
   </div>
 
   <script src="../common/utils.js"></script>
@@ -59,7 +39,10 @@
   <script src="../common/badges/badge_utils.js"></script>
   <script src="../common/badges/badge_renderer.js"></script>
   <script src="../common/badges/badge_row_renderer.js"></script>
-  <script src="dashboard_renderer.js"></script>
+  <script src="tabs/history/history_renderer.js"></script>
+  <script src="tabs/history/history.js"></script>
+  <script src="tabs/reviews/reviews_renderer.js"></script>
+  <script src="tabs/reviews/reviews.js"></script>
   <script src="dashboard.js"></script>
 </body>
 

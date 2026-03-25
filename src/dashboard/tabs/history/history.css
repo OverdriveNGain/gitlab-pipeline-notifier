@@ -47,9 +47,13 @@
 }
 
 .pipeline-id {
-    font-weight: bold;
-    color: var(--gl-text-color);
+    font-weight: 600;
+    color: var(--gl-info-color);
     text-decoration: none;
+}
+
+.pipeline-id:hover {
+    text-decoration: underline;
 }
 
 .pipeline-time {

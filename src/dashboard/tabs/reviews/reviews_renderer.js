@@ -29,7 +29,7 @@ const ReviewsRenderer = {
           repo.mrs.forEach(mr => {
             html += `<div class="review-mr-group" style="margin-bottom: 12px;">
                        <div class="review-mr-header" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding-left: 12px; width: 100%; box-sizing: border-box;">
-                         <a href="${mr.url}" target="_blank" style="font-weight: 600; color: var(--gl-info-color); flex-shrink: 0; text-decoration: none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">${mr.id}</a>
+                         <a href="${mr.url}" target="_blank" class="mr-id">${mr.id}</a>
                          <span style="color: var(--gl-text-color); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1;">${mr.title}</span>
                          <span style="font-size: 11px; color: var(--gl-text-secondary); flex-shrink: 0;">by ${mr.author}</span>
                        </div>
@@ -55,7 +55,7 @@ const ReviewsRenderer = {
                              <span class="review-time">${activity.timestamp}</span>
                              ${actionText}
                            </div>
-                           <button class="delete-btn delete-review-btn" data-timestamp="${activity.isoTimestamp}" data-mrid="${mr.id}" data-repo="${repo.name}" title="Remove activity">
+                           <button class="delete-btn delete-review-btn" data-timestamp="${activity.isoTimestamp}" data-mrid="${mr.id}" data-repo="${repo.name}" title="Remove activity" style="margin-left: 0; padding: 4px;">
                              <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">
                                <path fill-rule="evenodd" d="M6.5 1.75a.25.25 0 0 1 .25-.25h2.5a.25.25 0 0 1 .25.25V3h-3V1.75zm4.5 0V3h2.25a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1 0-1.5H5V1.75C5 .784 5.784 0 6.75 0h2.5C10.216 0 11 .784 11 1.75zM4.496 6.675l.66 6.6a.25.25 0 0 0 .249.225h5.19a.25.25 0 0 0 .249-.225l.66-6.6a.75.75 0 0 1 1.492.149l-.66 6.6A1.748 1.748 0 0 1 10.595 15h-5.19a1.75 1.75 0 0 1-1.741-1.575l-.66-6.6a.75.75 0 1 1 1.492-.15z"/>
                              </svg>

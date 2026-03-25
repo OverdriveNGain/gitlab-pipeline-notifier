@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "GitLab Pipeline Notifier",
+  "name": "GitLab+",
   "version": "1.0",
-  "description": "Notifies you when a GitLab pipeline completes.",
+  "description": "A collection of QOL extensions to GitLab for the Maya developer.",
   "permissions": [
     "notifications",
     "storage"

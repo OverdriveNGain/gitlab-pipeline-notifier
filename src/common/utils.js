@@ -42,6 +42,32 @@ const Utils = {
     }
   },
 
+  getHumanReadableDateOnly: (timestamp) => {
+    if (!timestamp) return '';
+    const now = new Date();
+    const date = new Date(timestamp);
+
+    // Normalize to midnight for day comparison
+    const nowMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const dateMidnight = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const diffDays = Math.round((nowMidnight - dateMidnight) / (1000 * 60 * 60 * 24));
+
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+    if (diffDays === 0) {
+      return `Today`;
+    } else if (diffDays === 1) {
+      return `Yesterday`;
+    } else if (diffDays <= now.getDay()) {
+      return `This Week ${dayNames[date.getDay()]}`;
+    } else if (diffDays <= now.getDay() + 7) {
+      return `Last Week ${dayNames[date.getDay()]}`;
+    } else {
+      return `${monthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+    }
+  },
+
   /**
    * Waits for an element to appear in the DOM
    * @param {string} selector 

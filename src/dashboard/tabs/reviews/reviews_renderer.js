@@ -1,5 +1,5 @@
 const ReviewsRenderer = {
-  renderReviews: (containerId, data) => {
+  renderReviews: (containerId, data, mrStates = {}) => {
     const container = document.getElementById(containerId);
     if (!container) return;
 
@@ -13,7 +13,7 @@ const ReviewsRenderer = {
     
     data.forEach(day => {
       html += `<div class="review-day-group">
-                 <h2 class="review-date-header">${day.date}</h2>`;
+                 <h2 class="review-date-header" data-human="${Utils.escapeHtml(day.date)}" data-full="${Utils.escapeHtml(day.exactDate || '')}">${day.date}</h2>`;
       
       day.repositories.forEach(repo => {
         html += `<div class="review-repo-group">
@@ -27,9 +27,33 @@ const ReviewsRenderer = {
         
         if (repo.mrs) {
           repo.mrs.forEach(mr => {
-            html += `<div class="review-mr-group" style="margin-bottom: 12px;">
+            const stateKey = `${repo.name}:::${mr.id}`;
+            const mrState = mrStates && mrStates[stateKey];
+            let stateClass = mrState === 'In Review' ? 'custom-badge badge-blue' : ((mrState === 'Done' || mrState === 'N/A') ? 'custom-badge badge-green' : 'badge-add-btn');
+            
+            const stateDropdown = `
+              <div style="position: relative; display: inline-flex; align-items: center; justify-content: center; margin-left: 2px; margin-right: 0;">
+                <div class="${stateClass}" style="margin: 0; pointer-events: none; height: 20px; box-sizing: border-box; ${!mrState ? 'padding-bottom: 2px; line-height: 1;' : ''}">${mrState || '+'}</div>
+                <!-- Invisible Select overlay -->
+                <select class="mr-state-select cursor-pointer" data-repo="${repo.name}" data-mrid="${mr.id}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; appearance: none; outline: none; cursor: pointer;">
+                  <option value="" ${!mrState ? 'selected' : ''}>+</option>
+                  <option value="In Review" ${mrState === 'In Review' ? 'selected' : ''}>In Review</option>
+                  <option value="Done" ${mrState === 'Done' ? 'selected' : ''}>Done</option>
+                  <option value="N/A" ${mrState === 'N/A' ? 'selected' : ''}>N/A</option>
+                </select>
+              </div>`;
+
+            const isApproved = mr.isApproved;
+            let highlightStyle = '';
+            if (!mrState || (mrState === 'In Review' && isApproved)) {
+                // Warning orange tint
+                highlightStyle = 'background-color: rgba(230, 172, 0, 0.1); border-left: 3px solid #e6ac00; margin-left: -3px; padding: 8px 8px 4px 0; border-radius: 0 4px 4px 0;';
+            }
+
+            html += `<div class="review-mr-group" style="margin-bottom: 12px; ${highlightStyle}">
                        <div class="review-mr-header" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding-left: 12px; width: 100%; box-sizing: border-box;">
                          <a href="${mr.url}" target="_blank" class="mr-id">${mr.id}</a>
+                         ${stateDropdown}
                          <span style="color: var(--gl-text-color); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1;">${mr.title}</span>
                          <span style="font-size: 11px; color: var(--gl-text-secondary); flex-shrink: 0;">by ${mr.author}</span>
                        </div>

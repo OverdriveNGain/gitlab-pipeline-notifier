@@ -25,6 +25,11 @@ const HistoryTab = {
     }
 
     // Initial Load
+    InfoBannerRenderer.render('historyBannerContainer', "What can I do on this page?", `
+      <li style="margin-bottom: 8px;"><strong>Status Tracking</strong>: A complete centralized history of all GitLab pipelines triggered via the extension interface.</li>
+      <li style="margin-bottom: 8px;"><strong>Variables & Badges</strong>: View exact variables used to trigger each pipeline and edit custom status badges to easily build versions.</li>
+      <li><strong>One-Click Rerun</strong>: Instantly rerun any historical pipeline directly from this view with all its original configuration parameters preserved.</li>
+    `);
     HistoryTab.loadData();
   },
 
@@ -38,7 +43,7 @@ const HistoryTab = {
   render: () => {
     const searchInput = document.getElementById('searchInput');
     const statusFilter = document.getElementById('statusFilter');
-    
+
     if (!searchInput || !statusFilter) return;
 
     const searchTerm = searchInput.value.toLowerCase();

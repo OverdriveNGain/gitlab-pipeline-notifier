@@ -181,3 +181,11 @@
 
 .cursor-pointer { cursor: pointer; }
 .cursor-default { cursor: default; }
+
+.info-intro-banner:hover .info-intro-popover {
+    display: block !important;
+}
+
+.info-intro-banner:hover .info-intro-header {
+    opacity: 1 !important;
+}

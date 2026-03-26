@@ -157,5 +157,27 @@ const ReviewRepository = {
 
   clearHistory: (callback) => {
     chrome.storage.local.remove('review_history', callback);
+  },
+
+  getMrStates: (callback) => {
+    chrome.storage.local.get('review_mr_states', (result) => {
+      callback(result.review_mr_states || {});
+    });
+  },
+
+  saveMrStates: (states, callback) => {
+    chrome.storage.local.set({ 'review_mr_states': states }, callback);
+  },
+
+  setMrState: (repoName, mrId, state, callback) => {
+    ReviewRepository.getMrStates((states) => {
+      const key = `${repoName}:::${mrId}`;
+      if (!state) {
+        delete states[key];
+      } else {
+        states[key] = state;
+      }
+      ReviewRepository.saveMrStates(states, callback);
+    });
   }
 };

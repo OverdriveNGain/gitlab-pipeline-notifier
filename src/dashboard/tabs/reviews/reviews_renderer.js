@@ -50,11 +50,31 @@ const ReviewsRenderer = {
                 highlightStyle = 'background-color: rgba(230, 172, 0, 0.1); border-left: 3px solid #e6ac00; margin-left: -3px; padding: 8px 8px 4px 0; border-radius: 0 4px 4px 0;';
             }
 
+            // Process title to ensure links work (target="_blank" and absolute URLs)
+            let processedTitle = mr.title;
+            if (mr.title.includes('<a')) {
+                try {
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = mr.title;
+                    const repoOrigin = new URL(mr.url).origin;
+                    tempDiv.querySelectorAll('a').forEach(link => {
+                        const href = link.getAttribute('href');
+                        if (href && href.startsWith('/')) link.setAttribute('href', repoOrigin + href);
+                        link.setAttribute('target', '_blank');
+                        link.setAttribute('rel', 'noopener noreferrer');
+                        // Ensure it looks like a link
+                        link.style.cursor = 'pointer';
+                        link.style.pointerEvents = 'auto';
+                    });
+                    processedTitle = tempDiv.innerHTML;
+                } catch(e) { console.warn('Error processing MR title links:', e); }
+            }
+
             html += `<div class="review-mr-group" style="margin-bottom: 12px; ${highlightStyle}">
                        <div class="review-mr-header" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding-left: 12px; width: 100%; box-sizing: border-box;">
                          <a href="${mr.url}" target="_blank" class="mr-id">${mr.id}</a>
                          ${stateDropdown}
-                         <span style="color: var(--gl-text-color); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1;">${mr.title}</span>
+                         <span class="mr-title-text" style="color: var(--gl-text-color); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1; pointer-events: auto;">${processedTitle}</span>
                          <span style="font-size: 11px; color: var(--gl-text-secondary); flex-shrink: 0;">by ${mr.author}</span>
                        </div>
                        <ul class="review-activities-list">`;

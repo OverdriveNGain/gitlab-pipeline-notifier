@@ -52,6 +52,18 @@
     text-decoration: underline;
 }
 
+.mr-title-text a {
+    font-weight: 600;
+    color: var(--gl-info-color);
+    text-decoration: none;
+    cursor: pointer !important;
+    pointer-events: auto !important;
+}
+
+.mr-title-text a:hover {
+    text-decoration: underline;
+}
+
 .review-activities-list {
     list-style: none;
     padding: 0;

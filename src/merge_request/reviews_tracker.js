@@ -19,13 +19,23 @@ const ReviewsTracker = {
     const titleEl = document.querySelector('h1[data-testid="title-content"]');
     let mrTitle = 'Unknown MR';
     if (titleEl) {
-      mrTitle = titleEl.textContent.trim();
+      const clonedTitle = titleEl.cloneNode(true);
+      const copyHint = clonedTitle.querySelector('#mr-copy-hint');
+      if (copyHint) copyHint.remove();
+      
+      // Ensure all links have absolute URLs and target="_blank"
+      clonedTitle.querySelectorAll('a').forEach(a => {
+        const href = a.getAttribute('href');
+        if (href && href.startsWith('/')) {
+            a.setAttribute('href', window.location.origin + href);
+        }
+        a.setAttribute('target', '_blank');
+        a.setAttribute('rel', 'noopener noreferrer');
+      });
+
+      mrTitle = clonedTitle.innerHTML.trim();
       // Clean up common prefixes like "Draft:"
       mrTitle = mrTitle.replace(/^(?:Draft|WIP|Draft \/ WIP|Resolved):\s*/i, '');
-      // Clean up the dynamically appended copy hint from mr_tracker
-      if (mrTitle.includes('Press H to copy MR title')) {
-        mrTitle = mrTitle.replace('Press H to copy MR title', '').trim();
-      }
     }
 
     // Extract Author

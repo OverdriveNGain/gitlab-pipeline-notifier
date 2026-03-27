@@ -141,6 +141,13 @@ const ReviewRepository = {
       }
     */
     ReviewRepository.getHistory((history) => {
+      // Backfill the updated title to past entries of the same MR
+      history.forEach(h => {
+        if (h.mrId === activity.mrId && h.repoName === activity.repoName) {
+          h.mrTitle = activity.mrTitle;
+        }
+      });
+
       history.unshift(activity);
       // Limit to last 200 review events
       if (history.length > 200) history.pop();

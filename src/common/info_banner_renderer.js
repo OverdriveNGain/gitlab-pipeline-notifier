@@ -2,10 +2,10 @@ const InfoBannerRenderer = {
   render: (containerId, title, itemsHtml) => {
     const container = document.getElementById(containerId);
     if (!container) return;
-    
+
     container.innerHTML = `
       <div style="display: flex; justify-content: flex-end; width: 100%;">
-        <div class="info-intro-banner" style="margin: 16px 16px 0 16px; display: inline-flex; position: relative;">
+        <div class="info-intro-banner" style="margin: 0px 16px 0 16px; display: inline-flex; position: relative;">
           <div class="info-intro-header" style="display: flex; gap: 6px; align-items: center; cursor: default; color: var(--gl-text-secondary); opacity: 0.8; transition: opacity 0.2s;">
             <span style="font-size: 12px; font-weight: 500;">${Utils.escapeHtml(title)}</span>
             <svg viewBox="0 0 16 16" width="14" height="14" fill="currentColor">

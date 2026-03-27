@@ -10,11 +10,11 @@ const ReviewsRenderer = {
     }
 
     let html = '<div class="reviews-container" style="padding: 16px;">';
-    
+
     data.forEach(day => {
       html += `<div class="review-day-group">
                  <h2 class="review-date-header" data-human="${Utils.escapeHtml(day.date)}" data-full="${Utils.escapeHtml(day.exactDate || '')}">${day.date}</h2>`;
-      
+
       day.repositories.forEach(repo => {
         html += `<div class="review-repo-group">
                    <h3 class="review-repo-header">
@@ -24,13 +24,13 @@ const ReviewsRenderer = {
                      ${repo.name}
                    </h3>
                    </h3>`;
-        
+
         if (repo.mrs) {
           repo.mrs.forEach(mr => {
             const stateKey = `${repo.name}:::${mr.id}`;
             const mrState = mrStates && mrStates[stateKey];
             let stateClass = mrState === 'In Review' ? 'custom-badge badge-blue' : ((mrState === 'Done' || mrState === 'N/A') ? 'custom-badge badge-green' : 'badge-add-btn');
-            
+
             const stateDropdown = `
               <div style="position: relative; display: inline-flex; align-items: center; justify-content: center; margin-left: 2px; margin-right: 0;">
                 <div class="${stateClass}" style="margin: 0; pointer-events: none; height: 20px; box-sizing: border-box; ${!mrState ? 'padding-bottom: 2px; line-height: 1;' : ''}">${mrState || '+'}</div>
@@ -46,39 +46,39 @@ const ReviewsRenderer = {
             const isApproved = mr.isApproved;
             let highlightStyle = '';
             if (!mrState || (mrState === 'In Review' && isApproved)) {
-                // Warning orange tint
-                highlightStyle = 'background-color: rgba(230, 172, 0, 0.1); border-left: 3px solid #e6ac00; margin-left: -3px; padding: 8px 8px 4px 0; border-radius: 0 4px 4px 0;';
+              // Warning orange tint
+              highlightStyle = 'background-color: rgba(230, 172, 0, 0.1); border-left: 3px solid #e6ac00; margin-left: -3px; padding: 8px 8px 4px 0; border-radius: 0 4px 4px 0;';
             }
 
             // Process title to ensure links work (target="_blank" and absolute URLs)
             let processedTitle = mr.title;
             if (mr.title.includes('<a')) {
-                try {
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = mr.title;
-                    const repoOrigin = new URL(mr.url).origin;
-                    tempDiv.querySelectorAll('a').forEach(link => {
-                        const href = link.getAttribute('href');
-                        if (href && href.startsWith('/')) link.setAttribute('href', repoOrigin + href);
-                        link.setAttribute('target', '_blank');
-                        link.setAttribute('rel', 'noopener noreferrer');
-                        // Ensure it looks like a link
-                        link.style.cursor = 'pointer';
-                        link.style.pointerEvents = 'auto';
-                    });
-                    processedTitle = tempDiv.innerHTML;
-                } catch(e) { console.warn('Error processing MR title links:', e); }
+              try {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = mr.title;
+                const repoOrigin = new URL(mr.url).origin;
+                tempDiv.querySelectorAll('a').forEach(link => {
+                  const href = link.getAttribute('href');
+                  if (href && href.startsWith('/')) link.setAttribute('href', repoOrigin + href);
+                  link.setAttribute('target', '_blank');
+                  link.setAttribute('rel', 'noopener noreferrer');
+                  // Ensure it looks like a link
+                  link.style.cursor = 'pointer';
+                  link.style.pointerEvents = 'auto';
+                });
+                processedTitle = tempDiv.innerHTML;
+              } catch (e) { console.warn('Error processing MR title links:', e); }
             }
 
             html += `<div class="review-mr-group" style="margin-bottom: 12px; ${highlightStyle}">
-                       <div class="review-mr-header" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding-left: 12px; width: 100%; box-sizing: border-box;">
+                       <div class="review-mr-header" style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px; padding-left: 12px; width: 100%; box-sizing: border-box;">
                          <a href="${mr.url}" target="_blank" class="mr-id">${mr.id}</a>
                          ${stateDropdown}
                          <span class="mr-title-text" style="color: var(--gl-text-color); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; flex: 1; pointer-events: auto;">${processedTitle}</span>
                          <span style="font-size: 11px; color: var(--gl-text-secondary); flex-shrink: 0;">by ${mr.author}</span>
                        </div>
                        <ul class="review-activities-list">`;
-            
+
             mr.activities.forEach(activity => {
               let actionText;
               if (activity.type === 'approved') {
@@ -92,7 +92,7 @@ const ReviewsRenderer = {
               } else {
                 actionText = `<span class="review-action review-action-commented">Left ${activity.count} comment${activity.count > 1 ? 's' : ''}</span>`;
               }
-                
+
               html += `<li class="review-activity-item">
                          <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; width: 100%;">
                            <div style="display: flex; align-items: center; gap: 8px;">
@@ -107,14 +107,14 @@ const ReviewsRenderer = {
                          </div>
                        </li>`;
             });
-            
+
             html += `</ul></div>`;
           });
         }
-        
+
         html += `</div>`;
       });
-      
+
       html += `</div>`;
     });
 

@@ -41,7 +41,8 @@ body.fullscreen-mode .app-container {
 }
 
 .app-header {
-    padding: 16px;
+    padding: 0 16px;
+    height: 56px;
     border-bottom: 1px solid var(--gl-border-color);
     display: flex;
     justify-content: space-between;
@@ -53,6 +54,7 @@ body.fullscreen-mode .app-container {
     display: flex;
     align-items: center;
     gap: 12px;
+    height: 100%;
 }
 
 .app-logo {
@@ -68,15 +70,16 @@ h1 {
 
 .tabs-header {
     display: flex;
-    border-bottom: 1px solid var(--gl-border-color);
-    background-color: #292929;
+    height: 100%;
+    margin-left: 12px;
 }
 
 .tab-btn {
     background: none;
     border: none;
     color: var(--gl-text-secondary);
-    padding: 12px 24px;
+    padding: 0 20px;
+    height: 100%;
     font-size: 14px;
     font-weight: 500;
     cursor: pointer;

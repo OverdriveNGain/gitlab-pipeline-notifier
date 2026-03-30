@@ -16,18 +16,15 @@ const ReviewsTab = {
     
     const savedType = localStorage.getItem('review_filter_type') || '3_days_ago';
     const filterInput = document.getElementById('reviewDateFilter');
-    const yesterdayOpt = document.getElementById('yesterdayOption');
-    const todayOpt = document.getElementById('todayOption');
+    const customOpt = document.getElementById('customDatetimeOption');
     const editBtn = document.getElementById('editReviewTimeBtn');
 
     if (filterInput) {
       filterInput.value = savedType;
-      if (savedType === 'yesterday_custom' || savedType === 'today_custom') {
-        const savedTime = localStorage.getItem('review_filter_time') || (savedType === 'today_custom' ? '09:00' : '15:00');
-        if (savedType === 'today_custom' && todayOpt) {
-          todayOpt.innerText = `Show logs starting from today at ${ReviewsTab.formatTime12h(savedTime)}`;
-        } else if (savedType === 'yesterday_custom' && yesterdayOpt) {
-          yesterdayOpt.innerText = `Show logs starting from yesterday at ${ReviewsTab.formatTime12h(savedTime)}`;
+      if (savedType === 'custom_datetime') {
+        const savedTs = localStorage.getItem('review_filter_custom_ts');
+        if (savedTs && customOpt) {
+          customOpt.innerText = `Show logs starting from ${Utils.getHumanReadableDate(parseInt(savedTs, 10))}`;
         }
         if (editBtn) editBtn.style.display = 'flex';
       }
@@ -53,13 +50,15 @@ const ReviewsTab = {
         if (filterType === '3_days_ago') {
           const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 3);
           filterTimestamp = d.getTime();
-        } else if (filterType === 'yesterday_custom' || filterType === 'today_custom') {
-          const isToday = filterType === 'today_custom';
-          const timeStr = localStorage.getItem('review_filter_time') || (isToday ? '09:00' : '15:00');
-          const [h, m] = timeStr.split(':');
-          const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (isToday ? 0 : 1));
-          d.setHours(parseInt(h, 10), parseInt(m, 10), 0, 0);
-          filterTimestamp = d.getTime();
+        } else if (filterType === 'custom_datetime') {
+          const savedTs = localStorage.getItem('review_filter_custom_ts');
+          if (savedTs) {
+            filterTimestamp = parseInt(savedTs, 10);
+          } else {
+            // Default to today at 9 AM if nothing saved
+            const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 9, 0, 0, 0);
+            filterTimestamp = d.getTime();
+          }
         } else if (filterType === 'all') {
           filterTimestamp = 0;
         }
@@ -79,49 +78,77 @@ const ReviewsTab = {
     container.dataset.listenerAttached = 'true';
 
     const filterInput = document.getElementById('reviewDateFilter');
+    const customOpt = document.getElementById('customDatetimeOption');
     const editBtn = document.getElementById('editReviewTimeBtn');
-    const yesterdayOpt = document.getElementById('yesterdayOption');
-    const todayOpt = document.getElementById('todayOption');
 
-    const handleCustomTimePrompt = (type) => {
-      const isToday = type === 'today_custom';
-      const defaultTime = isToday ? '09:00' : '15:00';
-      const currentTime = localStorage.getItem('review_filter_time') || defaultTime;
-      const timeStr = prompt(`Enter a time for ${isToday ? 'today' : 'yesterday'} (e.g., 3:00 PM or 15:00):`, currentTime);
+    const handleCustomTimePrompt = () => {
+      const savedTs = localStorage.getItem('review_filter_custom_ts');
+      let defaultVal = "";
+      if (savedTs) {
+        const d = new Date(parseInt(savedTs, 10));
+        const dateStr = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
+        const timeStr = `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+        defaultVal = `${dateStr} ${timeStr}`;
+      } else {
+        const d = new Date();
+        defaultVal = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')} 09:00`;
+      }
+
+      const input = prompt("Enter a starting date and time (YYYY-MM-DD HH:MM or use 'today HH:MM' / 'yesterday HH:MM'):", defaultVal);
       
-      if (timeStr === null) {
-        if (!localStorage.getItem('review_filter_time')) {
+      if (input === null) {
+        if (!localStorage.getItem('review_filter_custom_ts')) {
           if (filterInput) filterInput.value = '3_days_ago';
           localStorage.setItem('review_filter_type', '3_days_ago');
           if (editBtn) editBtn.style.display = 'none';
-          if (yesterdayOpt) yesterdayOpt.innerText = `Show logs starting from yesterday at time X`;
-          if (todayOpt) todayOpt.innerText = `Show logs starting from today at time X`;
+          if (customOpt) customOpt.innerText = `Show logs starting from datetime X`;
         } else {
           if (filterInput) filterInput.value = localStorage.getItem('review_filter_type');
         }
         return false;
       }
       
-      let parsed = defaultTime;
-      const match = timeStr.trim().match(/(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)?/i);
-      if (match) {
-        let hours = parseInt(match[1], 10);
-        const mins = match[2];
-        const ampm = match[3] ? match[3].toLowerCase() : null;
+      let targetDate = new Date();
+      let timeMatch = null;
+
+      const lowerInput = input.toLowerCase().trim();
+      if (lowerInput.startsWith('today')) {
+        targetDate = new Date();
+        timeMatch = lowerInput.replace('today', '').trim().match(/(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)?/i);
+      } else if (lowerInput.startsWith('yesterday')) {
+        targetDate = new Date(Date.now() - 86400000);
+        timeMatch = lowerInput.replace('yesterday', '').trim().match(/(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)?/i);
+      } else {
+        // Try parsing as full datetime
+        const d = new Date(input);
+        if (!isNaN(d.getTime())) {
+          targetDate = d;
+          timeMatch = { fullMatch: true }; // Dummy to skip time parsing below
+        } else {
+          // Try regex for YYYY-MM-DD HH:MM
+          const fullMatch = input.trim().match(/^(\d{4}-\d{2}-\d{2})\s+(\d{1,2}):(\d{2})\s*(AM|PM|am|pm)?$/i);
+          if (fullMatch) {
+            targetDate = new Date(fullMatch[1]);
+            timeMatch = [null, fullMatch[2], fullMatch[3], fullMatch[4]];
+          }
+        }
+      }
+
+      if (timeMatch && !timeMatch.fullMatch) {
+        let hours = parseInt(timeMatch[1], 10);
+        const mins = parseInt(timeMatch[2], 10);
+        const ampm = timeMatch[3] ? timeMatch[3].toLowerCase() : null;
         if (ampm === 'pm' && hours < 12) hours += 12;
         if (ampm === 'am' && hours === 12) hours = 0;
-        parsed = `${hours.toString().padStart(2, '0')}:${mins}`;
-      } else {
-        alert("Invalid time format. Please use HH:MM format (e.g., 15:00 or 3:00 PM).");
-        return handleCustomTimePrompt(type);
+        targetDate.setHours(hours, mins, 0, 0);
+      } else if (!timeMatch) {
+        alert("Invalid format. Please use 'YYYY-MM-DD HH:MM', 'today HH:MM', or 'yesterday HH:MM'.");
+        return handleCustomTimePrompt();
       }
       
-      localStorage.setItem('review_filter_time', parsed);
-      if (isToday) {
-        if (todayOpt) todayOpt.innerText = `Show logs starting from today at ${ReviewsTab.formatTime12h(parsed)}`;
-      } else {
-        if (yesterdayOpt) yesterdayOpt.innerText = `Show logs starting from yesterday at ${ReviewsTab.formatTime12h(parsed)}`;
-      }
+      const finalTs = targetDate.getTime();
+      localStorage.setItem('review_filter_custom_ts', finalTs);
+      if (customOpt) customOpt.innerText = `Show logs starting from ${Utils.getHumanReadableDate(finalTs)}`;
       return true;
     };
 
@@ -131,8 +158,8 @@ const ReviewsTab = {
         const val = e.target.value;
         localStorage.setItem('review_filter_type', val);
         
-        if (val === 'yesterday_custom' || val === 'today_custom') {
-          if (handleCustomTimePrompt(val)) {
+        if (val === 'custom_datetime') {
+          if (handleCustomTimePrompt()) {
             if (editBtn) editBtn.style.display = 'flex';
             ReviewsTab.loadData();
           }
@@ -147,8 +174,8 @@ const ReviewsTab = {
       editBtn.dataset.listenerAttached = 'true';
       editBtn.addEventListener('click', () => {
         const currentType = localStorage.getItem('review_filter_type');
-        if (currentType === 'yesterday_custom' || currentType === 'today_custom') {
-          if (handleCustomTimePrompt(currentType)) ReviewsTab.loadData();
+        if (currentType === 'custom_datetime') {
+          if (handleCustomTimePrompt()) ReviewsTab.loadData();
         }
       });
     }
